@@ -100,7 +100,11 @@ export function buildMetricPingSource(
   metricsResponse: MetricQueryResponse
 ): PingSource | null {
   const stats = (statsResponse.stats ?? []).filter(
-    (item) => item.entity_id === uuid
+    (item) =>
+      item.entity_id === uuid && item.total > 0 && item.valid > 0
+  );
+  const includedTaskIds = new Set(
+    stats.map((item) => String(item.task_id))
   );
   const latencyPoints: TimedValue[] = [];
   const lossPoints: WeightedLoss[] = [];
@@ -112,7 +116,7 @@ export function buildMetricPingSource(
     if (series.metric_key === "ping.loss") {
       for (const point of series.points) {
         const taskId = metricTaskId(series, point);
-        if (!taskId) continue;
+        if (!includedTaskIds.has(taskId)) continue;
         if (!isFiniteNumber(point.value)) continue;
         lossPoints.push({
           time: point.time,
@@ -127,7 +131,7 @@ export function buildMetricPingSource(
 
     if (series.metric_key !== "ping.latency_ms") continue;
     for (const point of series.points) {
-      if (!metricTaskId(series, point)) continue;
+      if (!includedTaskIds.has(metricTaskId(series, point))) continue;
       if (!isFiniteNumber(point.value)) continue;
       latencyPoints.push({ time: point.time, value: point.value });
     }
@@ -146,7 +150,6 @@ export function buildMetricPingSource(
     stats
       .filter(
         (item) =>
-          item.total > 0 &&
           !item.loss_approximate &&
           isFiniteNumber(item.loss)
       )
@@ -244,7 +247,9 @@ function buildHistory(
 function summarizeMetricSource(
   source: Extract<PingSource, { kind: "metrics" }>
 ): PingSummary {
-  const stats = source.stats.filter((item) => item.total > 0);
+  const stats = source.stats.filter(
+    (item) => item.total > 0 && item.valid > 0
+  );
   const latencyValues = stats.flatMap((item) =>
     item.valid > 0 && isFiniteNumber(item.avg)
       ? [{ value: item.avg, weight: item.valid }]
@@ -279,9 +284,12 @@ function summarizeRecordSource(
     taskRecords.set(record.task_id, records);
   }
 
+  const includedTaskRecords = [...taskRecords.values()].filter((records) =>
+    records.some((record) => record.value >= 0)
+  );
   const taskLatencies: number[] = [];
   const taskLosses: number[] = [];
-  for (const records of taskRecords.values()) {
+  for (const records of includedTaskRecords) {
     const valid = records
       .map((record) => record.value)
       .filter((value) => value >= 0);
@@ -291,10 +299,11 @@ function summarizeRecordSource(
     if (valid.length) taskLatencies.push(average(valid));
   }
 
-  const latencyPoints = source.records
+  const includedRecords = includedTaskRecords.flat();
+  const latencyPoints = includedRecords
     .filter((record) => record.value >= 0)
     .map((record) => ({ time: record.time, value: record.value }));
-  const lossPoints = source.records.map((record) => ({
+  const lossPoints = includedRecords.map((record) => ({
     time: record.time,
     value: record.value < 0 ? 1 : 0,
     count: 1,
@@ -304,7 +313,7 @@ function summarizeRecordSource(
     avgLatency: average(taskLatencies),
     avgLoss: average(taskLosses),
     history: buildHistory(latencyPoints, lossPoints),
-    hasData: taskRecords.size > 0,
+    hasData: includedTaskRecords.length > 0,
   };
 }
 

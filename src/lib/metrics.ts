@@ -119,6 +119,12 @@ export function calcOverview(
 export type MetricStatus = "success" | "info" | "warning" | "error";
 
 export function getStatus(percent: number): MetricStatus {
+  if (percent >= 80) return "error";
+  if (percent >= 60) return "warning";
+  return "success";
+}
+
+export function getTrafficStatus(percent: number): MetricStatus {
   if (percent >= 95) return "error";
   if (percent >= 80) return "warning";
   if (percent >= 60) return "info";

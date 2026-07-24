@@ -198,7 +198,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const el = document.getElementById("theme-background");
     if (el) {
       if (bg) {
-        el.style.backgroundImage = `url(${bg})`;
+        el.style.backgroundImage = `url(${JSON.stringify(bg)})`;
         el.style.opacity = "1";
       } else {
         el.style.backgroundImage = "";

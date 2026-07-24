@@ -16,11 +16,13 @@ export function ProgressBar({
   status = "success",
   className,
   height = 4,
+  duration = 500,
 }: {
   percentage: number;
   status?: MetricStatus;
   className?: string;
   height?: number;
+  duration?: number;
 }) {
   const pct = clampPercent(percentage);
   return (
@@ -33,10 +35,10 @@ export function ProgressBar({
     >
       <div
         className={cn(
-          "h-full rounded-full transition-[width] duration-500 ease-out",
+          "h-full rounded-full transition-[width] ease-out",
           statusColor[status]
         )}
-        style={{ width: `${pct}%` }}
+        style={{ width: `${pct}%`, transitionDuration: `${duration}ms` }}
       />
     </div>
   );

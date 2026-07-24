@@ -24,11 +24,11 @@
   --selection: #0f766e;
   --border: rgb(83 104 116 / 0.18);
   --ring: #0f766e;
-  --signal-1: #078a63;
-  --signal-2: #43aa66;
-  --signal-3: #a4b932;
-  --signal-4: #e5a119;
-  --signal-5: #dc3f4f;
+  --signal-1: #059669;
+  --signal-2: #4ade80;
+  --signal-3: #a3e635;
+  --signal-4: #facc15;
+  --signal-5: #f43f5e;
   --glass-blur: 18px;
   --glass-bg: rgb(255 255 255 / 0.7);
   --glass-border: rgb(255 255 255 / 0.86);
@@ -41,7 +41,7 @@
   --node-card-border: rgb(226 232 240 / 0.68);
   --node-card-shadow: 0 8px 28px rgb(15 23 42 / 0.18);
   --node-data-bg: rgb(100 116 139 / 0.055);
-  --node-offline-bg: rgb(255 255 255 / 0.3);
+  --node-offline-bg: rgb(255 255 255 / 0.2);
 }
 
 .dark {
@@ -66,10 +66,10 @@
   --selection: #54d6ab;
   --border: rgb(218 234 230 / 0.12);
   --ring: #54d6ab;
-  --signal-1: #38c895;
-  --signal-2: #67d184;
-  --signal-3: #b5c950;
-  --signal-4: #f0b84b;
+  --signal-1: #10b981;
+  --signal-2: #4ade80;
+  --signal-3: #a3e635;
+  --signal-4: #fde047;
   --signal-5: #fb7185;
   --glass-bg: rgb(23 27 28 / 0.76);
   --glass-border: rgb(255 255 255 / 0.1);
@@ -82,7 +82,7 @@
   --node-card-border: rgb(255 255 255 / 0.18);
   --node-card-shadow: 0 8px 30px rgb(0 0 0 / 0.48);
   --node-data-bg: rgb(148 163 184 / 0.065);
-  --node-offline-bg: rgb(0 0 0 / 0.3);
+  --node-offline-bg: rgb(0 0 0 / 0.2);
 }
 
 @theme inline {
@@ -133,9 +133,10 @@ html {
 body {
   margin: 0;
   color: var(--foreground);
-  background: var(--background);
+  background: transparent;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  isolation: isolate;
   text-rendering: optimizeLegibility;
 }
 
@@ -143,8 +144,7 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: -2;
-  background-color: var(--background);
+  z-index: 1;
   background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 32px 32px;
@@ -155,7 +155,7 @@ body::before {
 #theme-background {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -283,7 +283,6 @@ html[data-blur="off"] .glass-panel {
 }
 
 .node-card {
-  min-height: 320px;
   border-color: var(--node-card-border);
   background: var(--node-card-bg);
   box-shadow: var(--node-card-shadow);
@@ -317,18 +316,17 @@ html[data-blur="off"] .node-card {
 }
 
 .node-card-offline {
-  border-color: color-mix(in srgb, var(--destructive) 22%, var(--border));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive) 18%, transparent),
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive) 30%, transparent),
     var(--node-card-shadow);
 }
 
 .node-card-offline:hover {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive) 22%, transparent),
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive) 30%, transparent),
     0 12px 38px rgb(15 23 42 / 0.2);
 }
 
 .dark .node-card-offline:hover {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive) 22%, transparent),
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive) 30%, transparent),
     0 12px 38px rgb(0 0 0 / 0.54);
 }
 
@@ -341,7 +339,7 @@ html[data-blur="off"] .node-card {
   gap: 0.125rem;
   overflow: hidden;
   border-radius: 8px;
-  padding: 0.4rem 0.5rem;
+  padding: 0.375rem;
   background: var(--node-data-bg);
 }
 
@@ -383,6 +381,22 @@ html[data-blur="on"] .node-offline-overlay {
 .node-tag {
   flex: 0 1 auto;
   padding-inline: 0.42rem;
+}
+
+.node-card .chip-pill {
+  border: 0;
+  padding: 0.125rem 0.5rem;
+  color: var(--muted-foreground);
+  background: color-mix(in srgb, var(--muted) 82%, transparent);
+  font-size: 11px;
+}
+
+.node-card .node-tag {
+  border-color: color-mix(in srgb, var(--muted-foreground) 38%, transparent);
+  padding: 0.1rem 0.42rem;
+  color: var(--muted-foreground);
+  background: transparent;
+  font-size: 11px;
 }
 
 .tag-blue {
@@ -499,10 +513,6 @@ html[data-blur="on"] .node-offline-overlay {
 @media (max-width: 639px) {
   .overview-stat {
     min-height: 108px;
-  }
-
-  .node-card {
-    min-height: 0;
   }
 }
 

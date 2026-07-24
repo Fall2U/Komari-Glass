@@ -43,6 +43,26 @@ const osConfigs: OSConfig[] = [
     keywords: ["fedora"],
   },
   {
+    name: "Gentoo",
+    image: "/assets/logo/os-gentoo.svg",
+    keywords: ["gentoo"],
+  },
+  {
+    name: "Red Hat Enterprise Linux",
+    image: "/assets/logo/os-redhat.svg",
+    keywords: ["red hat", "redhat", "rhel"],
+  },
+  {
+    name: "Linux Mint",
+    image: "/assets/logo/os-mint.svg",
+    keywords: ["linux mint", "mint"],
+  },
+  {
+    name: "Manjaro",
+    image: "/assets/logo/os-manjaro-.svg",
+    keywords: ["manjaro"],
+  },
+  {
     name: "FreeBSD",
     image: "/assets/logo/os-freebsd.svg",
     keywords: ["freebsd", "bsd"],
@@ -61,6 +81,41 @@ const osConfigs: OSConfig[] = [
     name: "iStoreOS",
     image: "/assets/logo/os-istore.png",
     keywords: ["istore"],
+  },
+  {
+    name: "QNAP QTS",
+    image: "/assets/logo/os-qnap.svg",
+    keywords: ["qnap", "qts"],
+  },
+  {
+    name: "Astra Linux",
+    image: "/assets/logo/os-astar.png",
+    keywords: ["astra"],
+  },
+  {
+    name: "Orange Pi",
+    image: "/assets/logo/os-orange-pi.svg",
+    keywords: ["orange pi", "orangepi"],
+  },
+  {
+    name: "EulerOS",
+    image: "/assets/logo/os-huawei.svg",
+    keywords: ["euleros", "openeuler", "huawei"],
+  },
+  {
+    name: "Alibaba Cloud Linux",
+    image: "/assets/logo/alibabacloud-color.svg",
+    keywords: ["alibaba cloud", "aliyun", "alinux"],
+  },
+  {
+    name: "OpenCloudOS",
+    image: "/assets/logo/os-OpenCloudOS.png",
+    keywords: ["opencloudos"],
+  },
+  {
+    name: "Unraid",
+    image: "/assets/logo/os-unraid.svg",
+    keywords: ["unraid"],
   },
   {
     name: "Ubuntu",

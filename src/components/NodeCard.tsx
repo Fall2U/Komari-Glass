@@ -2,12 +2,12 @@
 
 import {
   AlertTriangle,
-  ArrowDown,
-  ArrowUp,
   CalendarDays,
   ChevronDown,
   ChevronUp,
   Coins,
+  Download,
+  Upload,
 } from "lucide-react";
 import { Flag } from "@/components/Flag";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -29,12 +29,13 @@ import {
 } from "@/lib/format";
 import {
   getStatus,
+  getTrafficStatus,
   getTrafficUsed,
   getTrafficUsedPercentage,
   hasTrafficLimit,
 } from "@/lib/metrics";
 import { getOSImage, getOSName } from "@/lib/os";
-import { getTagToneClass, parseNodeTags } from "@/lib/tags";
+import { parseNodeTags } from "@/lib/tags";
 import type { DisplayNode } from "@/lib/types";
 
 export function NodeCard({
@@ -64,6 +65,13 @@ export function NodeCard({
   const tags = parseNodeTags(node.tags);
   const ping = useNodePingStats(node.uuid, pingEnabled, 1);
   const offlineTime = formatOfflineTime(node.updated_at_live || node.updated_at);
+  const trafficValueClassName = limited
+    ? trafficPct >= 95
+      ? "text-destructive"
+      : trafficPct >= 60
+        ? "text-warning"
+        : "text-success"
+    : "text-muted-foreground";
 
   const priceText = paid
     ? formatPriceWithCycle(node.price, node.billing_cycle, node.currency || "¥")
@@ -96,7 +104,7 @@ export function NodeCard({
       onKeyDown={onKeyDown}
       aria-label={`查看 ${node.name} 详情`}
       className={cn(
-        "node-card glass-panel relative flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl",
+        "node-card glass-panel relative flex w-full min-w-0 self-start cursor-pointer flex-col overflow-hidden rounded-xl",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
         !node.online && "node-card-offline"
       )}
@@ -111,7 +119,9 @@ export function NodeCard({
           />
           {node.online ? (
             <span className="absolute inset-0 animate-ping rounded-full bg-success opacity-45" />
-          ) : null}
+          ) : (
+            <span className="absolute inset-0 animate-ping rounded-full bg-destructive opacity-45" />
+          )}
         </span>
         <h2 className="min-w-0 flex-1 truncate text-sm font-bold">
           {node.name}
@@ -119,7 +129,7 @@ export function NodeCard({
         <div className="flex shrink-0 items-center gap-1.5">
           {node.message?.trim() ? (
             <AlertTriangle
-              className="size-3.5 text-warning"
+              className="size-3.5 fill-warning/20 text-warning"
               aria-label="节点消息"
             >
               <title>{node.message.trim()}</title>
@@ -141,14 +151,9 @@ export function NodeCard({
       </header>
 
       <div className="node-card-content relative flex flex-1 flex-col gap-3 px-4 pb-4">
-        <div className="flex h-5 items-center gap-1.5 overflow-hidden">
-          <span
-            className={cn(
-              "chip-pill shrink-0",
-              node.online ? "chip-online" : "chip-offline"
-            )}
-          >
-            {node.online ? `在线 ${getUptimeDays(node.uptime)} 天` : "离线"}
+        <div className="-mt-1 flex h-[19px] items-center gap-1.5 overflow-hidden">
+          <span className="chip-pill shrink-0">
+            在线 {getUptimeDays(node.uptime)} 天
           </span>
           {priceText ? (
             <span
@@ -187,7 +192,11 @@ export function NodeCard({
             value={limited ? `${trafficPct.toFixed(1)}%` : "∞"}
             percent={limited ? trafficPct : 0}
             sub={`${formatBytes(trafficUsed)} / ${limited ? formatBytes(node.traffic_limit) : "∞"}`}
-            forceStatus={limited ? undefined : "success"}
+            forceStatus={limited ? getTrafficStatus(trafficPct) : "success"}
+            valueClassName={trafficValueClassName}
+            subClassName={
+              limited && trafficPct >= 95 ? "text-destructive" : undefined
+            }
             muted={!node.online}
           />
         </div>
@@ -203,10 +212,10 @@ export function NodeCard({
           </DataPanel>
 
           <DataPanel label="累计流量">
-            <CompactLine icon={<ArrowUp />}>
+            <CompactLine icon={<Upload />}>
               {formatBytes(node.net_total_up)}
             </CompactLine>
-            <CompactLine icon={<ArrowDown />}>
+            <CompactLine icon={<Download />}>
               {formatBytes(node.net_total_down)}
             </CompactLine>
           </DataPanel>
@@ -250,10 +259,7 @@ export function NodeCard({
             {tags.map((tag, index) => (
               <span
                 key={`${tag.text}-${index}`}
-                className={cn(
-                  "node-tag max-w-full truncate",
-                  getTagToneClass(tag.tone)
-                )}
+                className="node-tag max-w-full truncate"
                 title={tag.text}
               >
                 {tag.text}
@@ -281,6 +287,8 @@ function Metric({
   percent,
   sub,
   forceStatus,
+  valueClassName,
+  subClassName,
   muted,
 }: {
   label: string;
@@ -288,20 +296,30 @@ function Metric({
   percent: number;
   sub: string;
   forceStatus?: ReturnType<typeof getStatus>;
+  valueClassName?: string;
+  subClassName?: string;
   muted?: boolean;
 }) {
   return (
     <div className={cn("flex min-w-0 flex-col gap-1", muted && "opacity-55")}>
       <div className="flex items-center justify-between gap-2 text-xs">
         <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium tabular-nums">{value}</span>
+        <span className={cn("font-medium tabular-nums", valueClassName)}>
+          {value}
+        </span>
       </div>
       <ProgressBar
         percentage={percent}
         status={forceStatus ?? getStatus(percent)}
-        height={3}
+        height={4}
+        duration={300}
       />
-      <span className="truncate text-[10px] tabular-nums text-muted-foreground">
+      <span
+        className={cn(
+          "truncate text-[11px] tabular-nums text-muted-foreground",
+          subClassName
+        )}
+      >
         {sub}
       </span>
     </div>
@@ -367,26 +385,51 @@ function PingPanel({
   return (
     <div
       className={cn(
-        "node-data-panel h-11 gap-1.5 p-2",
-        dimmed && "opacity-45"
+        "node-data-panel group/ping-panel h-11 gap-1.5 !overflow-visible p-1.5",
+        dimmed && "blur-xs opacity-50"
       )}
     >
-      <div className="flex items-center justify-between gap-2 text-[10px] leading-none">
+      <div className="flex items-center justify-between gap-2 text-[11px] leading-none">
         <span className="text-muted-foreground">{label}</span>
         <span className="font-medium tabular-nums">{value}</span>
       </div>
       <div
-        className="grid min-h-0 flex-1 items-end gap-px opacity-85"
+        className="grid min-h-0 flex-1 items-end gap-px opacity-85 transition-opacity duration-150 group-hover/ping-panel:opacity-100"
         style={{
           gridTemplateColumns: `repeat(${Math.max(bars.length, 1)}, minmax(0, 1fr))`,
         }}
       >
-        {bars.map((bar) => (
+        {bars.map((bar, index) => (
           <span
             key={bar.key}
-            title={bar.tooltip}
-            className={cn("block h-full min-h-[3px] rounded-[1px]", bar.className)}
-          />
+            className="group/ping-bar relative block h-full min-w-0 hover:z-20"
+          >
+            <span
+              className={cn(
+                "block h-full min-h-[3px] w-full origin-bottom rounded-[1px]",
+                "transition-[transform,opacity] duration-150",
+                "group-hover/ping-panel:opacity-60 group-hover/ping-bar:scale-y-[1.6] group-hover/ping-bar:!opacity-100",
+                bar.className
+              )}
+            />
+            <span
+              role="tooltip"
+              className={cn(
+                "pointer-events-none absolute bottom-[calc(100%+0.4rem)] z-20 w-max max-w-32",
+                "invisible translate-y-0.5 whitespace-pre-line rounded-sm bg-foreground/90 px-1.5 py-1",
+                "text-[10px] leading-tight text-background opacity-0 shadow-lg",
+                "transition-[opacity,transform,visibility] duration-150",
+                "group-hover/ping-bar:visible group-hover/ping-bar:translate-y-0 group-hover/ping-bar:opacity-100",
+                bars.length === 1 || (index >= 3 && index < bars.length - 3)
+                  ? "left-1/2 -translate-x-1/2"
+                  : index < 3
+                    ? "left-0"
+                    : "right-0"
+              )}
+            >
+              {bar.tooltip}
+            </span>
+          </span>
         ))}
       </div>
     </div>

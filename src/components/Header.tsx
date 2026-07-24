@@ -51,6 +51,8 @@ export function Header() {
 
           <a
             href="/admin"
+            target="_blank"
+            rel="noopener noreferrer"
             className="icon-btn"
             aria-label="进入后台"
             title="进入后台"

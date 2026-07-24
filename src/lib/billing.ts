@@ -5,7 +5,7 @@ import type { AssetCurrency } from "./types";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const LONG_TERM_DAYS = 36500;
 
-export type ExpireStatus =
+type ExpireStatus =
   | "unknown"
   | "expired"
   | "critical"
@@ -13,7 +13,7 @@ export type ExpireStatus =
   | "normal"
   | "long_term";
 
-export type BillingCycleType =
+type BillingCycleType =
   | "once"
   | "monthly"
   | "quarterly"
@@ -80,7 +80,7 @@ export function getExpireStatus(
   return "normal";
 }
 
-export function parseBillingCycleType(billingCycle: number): BillingCycleType {
+function parseBillingCycleType(billingCycle: number): BillingCycleType {
   if (billingCycle === -1) return "once";
   for (const range of BILLING_CYCLE_RANGES) {
     if (billingCycle >= range.min && billingCycle <= range.max) return range.type;
@@ -88,7 +88,7 @@ export function parseBillingCycleType(billingCycle: number): BillingCycleType {
   return "custom";
 }
 
-export function getBillingCycleText(billingCycle: number): string {
+function getBillingCycleText(billingCycle: number): string {
   return CYCLE_TEXT[parseBillingCycleType(billingCycle)];
 }
 
@@ -97,7 +97,7 @@ export function isPaidPrice(price: number): boolean {
   return Number.isFinite(price) && price > 0;
 }
 
-export function getCurrencySymbol(currency = "¥"): string {
+function getCurrencySymbol(currency = "¥"): string {
   const value = String(currency || "¥").trim();
   switch (value.toUpperCase()) {
     case "CNY":
@@ -112,7 +112,7 @@ export function getCurrencySymbol(currency = "¥"): string {
   }
 }
 
-export function formatPrice(price: number, currency = "¥"): string {
+function formatPrice(price: number, currency = "¥"): string {
   if (price === -1) return "免费";
   if (price === 0) return "未设置";
   return `${getCurrencySymbol(currency)}${price}`;
@@ -153,17 +153,7 @@ export function formatCurrencyValue(value: number, currency = "¥"): string {
   return `${getCurrencySymbol(currency)}${text || "0"}`;
 }
 
-export function formatExpireRemaining(
-  expiredAt: string | number | null | undefined
-): string {
-  const status = getExpireStatus(expiredAt);
-  if (status === "unknown") return "—";
-  if (status === "expired") return "已过期";
-  if (status === "long_term") return "长期";
-  return `剩余 ${getDaysUntilExpired(expiredAt)} 天`;
-}
-
-export interface AssetTotals {
+interface AssetTotals {
   totalValue: number;
   remainingValue: number;
   currency: string;
@@ -238,14 +228,4 @@ export function calcAssetTotals(
     currency: ASSET_SYMBOLS[targetCurrency],
     paidCount,
   };
-}
-
-export function getMonthlyCost(
-  price: number,
-  billingCycle: number
-): number | null {
-  if (!isPaidPrice(price) || !Number.isFinite(billingCycle) || billingCycle <= 0) {
-    return null;
-  }
-  return (price / billingCycle) * 30;
 }

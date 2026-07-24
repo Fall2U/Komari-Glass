@@ -3,11 +3,24 @@ import type { LiveStatusMap, NodeStats } from "./types";
 
 type Listener = (data: LiveStatusMap) => void;
 
+type LivePayload =
+  | {
+      status: "success";
+      data: {
+        online: string[];
+        data: Record<string, NodeStats>;
+      };
+    }
+  | {
+      status: "error";
+      error: string;
+    };
+
 /**
  * Komari live metrics via WebSocket `/api/clients`.
- * Compatible with Komari 1.3.0 legacy clients protocol.
+ * This remains the public live-status endpoint in Komari 1.3.0+.
  */
-export class LiveWebSocket {
+class LiveWebSocket {
   private ws: WebSocket | null = null;
   private listeners = new Set<Listener>();
   private reconnectAttempts = 0;
@@ -44,23 +57,13 @@ export class LiveWebSocket {
 
       this.ws.onmessage = (event) => {
         try {
-          const payload = JSON.parse(event.data as string) as {
-            status?: string;
-            data?: {
-              online?: string[];
-              data?: Record<string, NodeStats>;
-            };
-          };
+          const payload = JSON.parse(event.data as string) as LivePayload;
 
-          if (payload.status === "success" && payload.data?.data) {
-            const online = new Set(payload.data.online || []);
+          if (payload.status === "success") {
+            const online = new Set(payload.data.online);
             const map: LiveStatusMap = {};
             for (const [uuid, stats] of Object.entries(payload.data.data)) {
-              map[uuid] = convertNodeStatsToLiveStatus(
-                stats,
-                uuid,
-                online.has(uuid)
-              );
+              map[uuid] = convertNodeStatsToLiveStatus(stats, online.has(uuid));
             }
             this.listeners.forEach((l) => l(map));
           }
@@ -97,7 +100,7 @@ export class LiveWebSocket {
   }
 
   private requestUpdate() {
-    // Komari legacy protocol: plain text "get"
+    // Komari 1.3.0+ public live protocol uses the plain-text "get" request.
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send("get");
     }

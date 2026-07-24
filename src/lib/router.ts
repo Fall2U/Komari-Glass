@@ -12,12 +12,6 @@ export function parsePath(pathname: string): Route {
     return { name: "instance", uuid: decodeURIComponent(instanceMatch[1]) };
   }
 
-  // also support /node/:uuid for compatibility
-  const nodeMatch = path.match(/^\/node\/([^/]+)$/);
-  if (nodeMatch) {
-    return { name: "instance", uuid: decodeURIComponent(nodeMatch[1]) };
-  }
-
   return { name: "not-found" };
 }
 

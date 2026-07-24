@@ -43,7 +43,7 @@ export function hasTrafficLimit(node: Pick<NodeData, "traffic_limit">): boolean 
   return (node.traffic_limit || 0) > 0;
 }
 
-export function mergeNode(
+function mergeNode(
   node: NodeData,
   live?: LiveStatus
 ): DisplayNode {
@@ -52,7 +52,6 @@ export function mergeNode(
     online: live?.online ?? false,
     cpu: live?.cpu ?? 0,
     ram: live?.ram ?? 0,
-    swap: live?.swap ?? 0,
     disk: live?.disk ?? 0,
     load: live?.load ?? 0,
     load5: live?.load5 ?? 0,
@@ -65,8 +64,6 @@ export function mergeNode(
     process: live?.process ?? 0,
     connections: live?.connections ?? 0,
     connections_udp: live?.connections_udp ?? 0,
-    temp: live?.temp ?? 0,
-    gpu: live?.gpu ?? 0,
     message: live?.message,
     updated_at_live: live?.time,
   };

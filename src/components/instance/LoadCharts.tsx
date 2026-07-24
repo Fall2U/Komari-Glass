@@ -23,7 +23,6 @@ interface ChartPoint {
   disk: number;
   net_in: number;
   net_out: number;
-  load: number;
 }
 
 function toPoints(records: HistoryRecord[]): ChartPoint[] {
@@ -33,12 +32,11 @@ function toPoints(records: HistoryRecord[]): ChartPoint[] {
       return {
         time: t,
         label: new Date(r.time).toLocaleString(),
-        cpu: r.cpu ?? 0,
-        ram: r.ram ?? 0,
-        disk: r.disk ?? 0,
-        net_in: r.net_in ?? 0,
-        net_out: r.net_out ?? 0,
-        load: r.load ?? 0,
+        cpu: r.cpu,
+        ram: r.ram,
+        disk: r.disk,
+        net_in: r.net_in,
+        net_out: r.net_out,
       };
     })
     .sort((a, b) => a.time - b.time);
@@ -101,29 +99,18 @@ export function LoadCharts({
           if (cancelled) return;
           setRecords(
             recent.map((s) => ({
-              client: s.client,
               time: s.time,
               cpu: s.cpu,
               ram: s.ram,
-              ram_total: s.ram_total || node.mem_total,
-              swap: s.swap,
-              swap_total: s.swap_total || node.swap_total,
-              load: s.load,
               disk: s.disk,
-              disk_total: s.disk_total || node.disk_total,
               net_in: s.net_in,
               net_out: s.net_out,
-              net_total_up: s.net_total_up,
-              net_total_down: s.net_total_down,
-              process: s.process,
-              connections: s.connections,
-              connections_udp: s.connections_udp,
             }))
           );
         } else {
           const data = await fetchLoadHistory(node.uuid, hours);
           if (cancelled) return;
-          setRecords(data?.records || []);
+          setRecords(data.records);
         }
       } catch (e) {
         if (!cancelled) {
@@ -137,7 +124,7 @@ export function LoadCharts({
     return () => {
       cancelled = true;
     };
-  }, [node.uuid, node.mem_total, node.swap_total, node.disk_total, hours]);
+  }, [node.uuid, hours]);
 
   const data = useMemo(() => toPoints(records), [records]);
 
@@ -158,20 +145,14 @@ export function LoadCharts({
   }
 
   const last = data[data.length - 1];
-  const memoryTotal =
-    node.mem_total > 0
-      ? node.mem_total
-      : Math.max(...data.map((point) => point.ram), 1);
-  const diskTotal =
-    node.disk_total > 0
-      ? node.disk_total
-      : Math.max(...data.map((point) => point.disk), 1);
+  const memoryTotal = node.mem_total;
+  const diskTotal = node.disk_total;
   const colors = {
     cpu: "#f43f5e",
     ram: "#0ea5a5",
     disk: "#f59e0b",
-    net: "#10b981",
-    load: "#3b82f6",
+    netOut: "#10b981",
+    netIn: "#3b82f6",
   };
 
   return (
@@ -358,8 +339,8 @@ export function LoadCharts({
             <Area
               type="monotone"
               dataKey="net_out"
-              stroke={colors.net}
-              fill={colors.net}
+              stroke={colors.netOut}
+              fill={colors.netOut}
               fillOpacity={0.12}
               strokeWidth={2}
               isAnimationActive={false}
@@ -367,8 +348,8 @@ export function LoadCharts({
             <Area
               type="monotone"
               dataKey="net_in"
-              stroke={colors.load}
-              fill={colors.load}
+              stroke={colors.netIn}
+              fill={colors.netIn}
               fillOpacity={0.1}
               strokeWidth={2}
               isAnimationActive={false}

@@ -9,7 +9,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { fetchNodes, fetchPublicInfo } from "@/lib/api";
+import {
+  fetchMetricDefinitions,
+  fetchNodes,
+  fetchPublicInfo,
+} from "@/lib/api";
 import { calcOverview, mergeNodes } from "@/lib/metrics";
 import { navigate, parsePath, toPath } from "@/lib/router";
 import {
@@ -22,6 +26,7 @@ import type {
   Appearance,
   DisplayNode,
   LiveStatusMap,
+  MetricDefinition,
   NodeData,
   PublicInfo,
   Route,
@@ -32,8 +37,7 @@ interface AppContextValue {
   error: string | null;
   publicInfo: PublicInfo | null;
   nodes: DisplayNode[];
-  rawNodes: NodeData[];
-  liveMap: LiveStatusMap | null;
+  metricRetention: MetricRetention;
   overview: ReturnType<typeof calcOverview>;
   settings: ReturnType<typeof mergeThemeSettings>;
   appearance: Appearance;
@@ -44,6 +48,38 @@ interface AppContextValue {
   goInstance: (uuid: string) => void;
   refresh: () => Promise<void>;
   sitename: string;
+}
+
+interface MetricRetention {
+  loadHours: number;
+  pingHours: number;
+}
+
+const LOAD_METRIC_KEYS = [
+  "cpu.usage",
+  "memory.used",
+  "disk.used",
+  "net.in.rate",
+  "net.out.rate",
+] as const;
+
+function getRetentionHours(
+  definitions: MetricDefinition[],
+  names: readonly string[]
+): number {
+  const byName = new Map(
+    definitions.map((definition) => [definition.name, definition.retention_days])
+  );
+  return Math.min(...names.map((name) => byName.get(name) ?? 0)) * 24;
+}
+
+function resolveMetricRetention(
+  definitions: MetricDefinition[]
+): MetricRetention {
+  return {
+    loadHours: getRetentionHours(definitions, LOAD_METRIC_KEYS),
+    pingHours: getRetentionHours(definitions, ["ping.latency_ms"]),
+  };
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -74,6 +110,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [publicInfo, setPublicInfo] = useState<PublicInfo | null>(null);
   const [rawNodes, setRawNodes] = useState<NodeData[]>([]);
   const [liveMap, setLiveMap] = useState<LiveStatusMap | null>(null);
+  const [metricRetention, setMetricRetention] = useState<MetricRetention>({
+    loadHours: 0,
+    pingHours: 0,
+  });
   const [route, setRoute] = useState<Route>({ name: "home" });
   const [appearance, setAppearanceState] = useState<Appearance>("system");
   const [systemDark, setSystemDark] = useState(false);
@@ -98,15 +138,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     try {
       setError(null);
-      const [pub, nodes] = await Promise.all([
+      const [pub, nodes, metricDefinitions] = await Promise.all([
         fetchPublicInfo(),
         fetchNodes(),
+        fetchMetricDefinitions(),
       ]);
       setPublicInfo(pub);
       setRawNodes(nodes);
+      setMetricRetention(resolveMetricRetention(metricDefinitions));
 
       // init appearance from localStorage or theme default
-      const defaults = mergeThemeSettings(pub?.theme_settings);
+      const defaults = mergeThemeSettings(pub.theme_settings);
       setAppearanceState(readStoredAppearance(defaults.defaultAppearance));
     } catch (e) {
       setError(e instanceof Error ? e.message : "加载失败");
@@ -170,9 +212,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Komari's admin node list stores its drag-and-drop order in `weight`.
   const nodes = useMemo(
     () =>
-      mergeNodes(rawNodes, liveMap).sort(
-        (a, b) => (a.weight ?? 0) - (b.weight ?? 0)
-      ),
+      mergeNodes(rawNodes, liveMap).sort((a, b) => a.weight - b.weight),
     [rawNodes, liveMap]
   );
 
@@ -227,8 +267,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     error,
     publicInfo,
     nodes,
-    rawNodes,
-    liveMap,
+    metricRetention,
     overview,
     settings,
     appearance,

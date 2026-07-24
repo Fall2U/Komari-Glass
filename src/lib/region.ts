@@ -146,7 +146,7 @@ function resolveEntry(region: string | null | undefined): RegionInfo | null {
 }
 
 /** Uppercase code for /images/flags/{CODE}.svg */
-export function getRegionCode(region: string | null | undefined): string {
+function getRegionCode(region: string | null | undefined): string {
   const entry = resolveEntry(region);
   if (entry) return entry.code;
   if (!region?.trim()) return "";

@@ -496,12 +496,6 @@ html[data-blur="on"] .node-offline-overlay {
   }
 }
 
-@media (min-width: 640px) {
-  .overview-strip.sm\:grid-cols-3 .overview-stat {
-    border-bottom: 0;
-  }
-}
-
 @media (max-width: 639px) {
   .overview-stat {
     min-height: 108px;

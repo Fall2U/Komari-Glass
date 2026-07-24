@@ -29,11 +29,7 @@ export const DEFAULT_THEME_SETTINGS: Required<
 export function mergeThemeSettings(
   raw: ThemeSettings | null | undefined
 ): typeof DEFAULT_THEME_SETTINGS {
-  const src = raw || {};
-
-  // Backward-compat: old showOnlineAssets maps to both online + assets
-  const legacyAssets = src.showOnlineAssets;
-  const hasLegacy = legacyAssets !== undefined && legacyAssets !== null;
+  const src = raw ?? {};
 
   return {
     defaultAppearance: normalizeAppearance(
@@ -49,18 +45,8 @@ export function mergeThemeSettings(
       src.backgroundImage ?? DEFAULT_THEME_SETTINGS.backgroundImage
     ),
     showStatsBar: bool(src.showStatsBar, DEFAULT_THEME_SETTINGS.showStatsBar),
-    showOnline: bool(
-      src.showOnline,
-      hasLegacy
-        ? bool(legacyAssets, true)
-        : DEFAULT_THEME_SETTINGS.showOnline
-    ),
-    showAssets: bool(
-      src.showAssets,
-      hasLegacy
-        ? bool(legacyAssets, true)
-        : DEFAULT_THEME_SETTINGS.showAssets
-    ),
+    showOnline: bool(src.showOnline, DEFAULT_THEME_SETTINGS.showOnline),
+    showAssets: bool(src.showAssets, DEFAULT_THEME_SETTINGS.showAssets),
     showTraffic: bool(src.showTraffic, DEFAULT_THEME_SETTINGS.showTraffic),
     showSpeed: bool(src.showSpeed, DEFAULT_THEME_SETTINGS.showSpeed),
   };
@@ -77,8 +63,6 @@ function normalizeAssetCurrency(
 
 function bool(value: unknown, fallback: boolean): boolean {
   if (typeof value === "boolean") return value;
-  if (value === "true" || value === 1 || value === "1") return true;
-  if (value === "false" || value === 0 || value === "0") return false;
   return fallback;
 }
 

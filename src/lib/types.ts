@@ -1,10 +1,4 @@
-/** Komari 1.3.0 public / nodes / live data types */
-
-export interface ApiResponse<T> {
-  status: "success" | "error";
-  message: string;
-  data: T;
-}
+/** Komari 1.3.0+ public RPC and live data types. */
 
 export interface ThemeSettings {
   defaultAppearance?: "system" | "light" | "dark";
@@ -12,30 +6,21 @@ export interface ThemeSettings {
   enableBlur?: boolean;
   backgroundImage?: string;
   showStatsBar?: boolean;
-  /** @deprecated use showOnline + showAssets */
-  showOnlineAssets?: boolean;
   showOnline?: boolean;
   showAssets?: boolean;
   showTraffic?: boolean;
   showSpeed?: boolean;
-  [key: string]: unknown;
 }
 
 export interface PublicInfo {
   sitename: string;
   description: string;
-  theme: string;
-  theme_settings: ThemeSettings | null;
-  record_enabled: boolean;
-  record_preserve_time: number;
-  ping_record_preserve_time: number;
-  private_site: boolean;
-  disable_password_login: boolean;
-  oauth_enable: boolean;
-  oauth_provider: string | null;
-  custom_head: string;
-  custom_body: string;
-  cors_origin_check_enabled?: boolean;
+  theme_settings: ThemeSettings;
+}
+
+export interface MetricDefinition {
+  name: string;
+  retention_days: number;
 }
 
 export type TrafficLimitType = "sum" | "max" | "min" | "up" | "down";
@@ -47,37 +32,31 @@ export interface NodeData {
   virtualization: string;
   arch: string;
   cpu_cores: number;
-  cpu_physical_cores?: number;
   os: string;
   kernel_version: string;
   gpu_name: string;
   region: string;
   mem_total: number;
-  swap_total: number;
   disk_total: number;
   weight: number;
   price: number;
   billing_cycle: number;
-  auto_renewal: boolean;
   currency: string;
   expired_at: string | null;
   group: string;
   tags: string;
   public_remark?: string;
-  hidden: boolean;
   traffic_limit: number;
   traffic_limit_type: TrafficLimitType;
-  created_at: string;
   updated_at: string;
 }
 
-/** Nested live stats from /api/clients and /api/recent */
+/** Nested live stats returned by Komari 1.3.0+ public APIs. */
 export interface NodeStats {
   cpu: { usage: number };
-  ram: { total: number; used: number };
-  swap: { total: number; used: number };
+  ram: { used: number };
   load: { load1: number; load5: number; load15: number };
-  disk: { total: number; used: number };
+  disk: { used: number };
   network: {
     up: number;
     down: number;
@@ -87,30 +66,19 @@ export interface NodeStats {
   connections: { tcp: number; udp: number };
   uptime: number;
   process: number;
-  message?: string;
+  message: string;
   updated_at: string;
-  gpu?: {
-    count: number;
-    average_usage: number;
-  };
 }
 
 /** Flattened live status used across UI */
 export interface LiveStatus {
-  client: string;
   time: string;
   cpu: number;
-  gpu: number;
   ram: number;
-  ram_total: number;
-  swap: number;
-  swap_total: number;
   load: number;
   load5: number;
   load15: number;
-  temp: number;
   disk: number;
-  disk_total: number;
   net_in: number;
   net_out: number;
   net_total_up: number;
@@ -120,7 +88,7 @@ export interface LiveStatus {
   connections_udp: number;
   online: boolean;
   uptime: number;
-  message?: string;
+  message: string;
 }
 
 export type LiveStatusMap = Record<string, LiveStatus>;
@@ -130,7 +98,6 @@ export interface DisplayNode extends NodeData {
   online: boolean;
   cpu: number;
   ram: number;
-  swap: number;
   disk: number;
   load: number;
   load5: number;
@@ -143,32 +110,17 @@ export interface DisplayNode extends NodeData {
   process: number;
   connections: number;
   connections_udp: number;
-  temp: number;
-  gpu: number;
   message?: string;
   updated_at_live?: string;
 }
 
 export interface HistoryRecord {
-  client: string;
   time: string;
   cpu: number;
-  gpu?: number;
   ram: number;
-  ram_total: number;
-  swap: number;
-  swap_total: number;
-  load: number;
-  temp?: number;
   disk: number;
-  disk_total: number;
   net_in: number;
   net_out: number;
-  net_total_up: number;
-  net_total_down: number;
-  process: number;
-  connections: number;
-  connections_udp: number;
 }
 
 export interface PingRecord {
@@ -180,12 +132,9 @@ export interface PingRecord {
 export interface PingTask {
   id: number;
   name: string;
-  interval?: number;
-  loss?: number;
 }
 
 export interface PingHistoryResponse {
-  count: number;
   records: PingRecord[];
   tasks: PingTask[];
 }

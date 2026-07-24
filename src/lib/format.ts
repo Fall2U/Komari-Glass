@@ -33,11 +33,6 @@ export function formatBytesSplit(
   };
 }
 
-export function formatPercent(value: number, decimals = 1): string {
-  if (!Number.isFinite(value)) return "0%";
-  return `${value.toFixed(decimals)}%`;
-}
-
 export function formatUptime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds <= 0) return "—";
   const d = Math.floor(seconds / 86400);

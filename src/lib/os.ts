@@ -114,7 +114,7 @@ const DEFAULT_OS = {
   image: "/images/logo/linux.svg",
 };
 
-export function getOSInfo(os: string): { name: string; image: string } {
+function getOSInfo(os: string): { name: string; image: string } {
   const lower = (os || "").toLowerCase();
   for (const cfg of osConfigs) {
     if (cfg.keywords.some((k) => lower.includes(k))) {

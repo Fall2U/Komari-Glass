@@ -27,7 +27,7 @@ const LOAD_RANGES = [
 ];
 
 export function InstancePage({ uuid }: { uuid: string }) {
-  const { nodes, loading, publicInfo, goHome } = useApp();
+  const { nodes, loading, metricRetention, goHome } = useApp();
   const node = useMemo(
     () => nodes.find((item) => item.uuid === uuid) || null,
     [nodes, uuid]
@@ -36,12 +36,11 @@ export function InstancePage({ uuid }: { uuid: string }) {
   const [loadHours, setLoadHours] = useState(0);
   const [pingHours, setPingHours] = useState(1);
 
-  const recordEnabled = publicInfo?.record_enabled ?? true;
-  const maxLoad = publicInfo?.record_preserve_time ?? 720;
-  const maxPing = publicInfo?.ping_record_preserve_time ?? 24;
-  const pingEnabled = recordEnabled && maxPing >= 1;
+  const maxLoad = metricRetention.loadHours;
+  const maxPing = metricRetention.pingHours;
+  const pingEnabled = maxPing >= 1;
   const loadRanges = LOAD_RANGES.filter(
-    (range) => range.hours === 0 || (recordEnabled && range.hours <= maxLoad)
+    (range) => range.hours === 0 || range.hours <= maxLoad
   );
   const pingRanges = LOAD_RANGES.filter(
     (range) => range.hours > 0 && range.hours <= maxPing

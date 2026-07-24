@@ -1,69 +1,89 @@
 import { convertNodeStatsToLiveStatus } from "./converters";
 import type {
-  ApiResponse,
   HistoryRecord,
   LiveStatus,
+  MetricDefinition,
   NodeData,
   NodeStats,
   PingHistoryResponse,
   PublicInfo,
 } from "./types";
 
-async function getJson<T>(endpoint: string): Promise<T> {
-  const res = await fetch(endpoint, {
+interface RpcResponse<T> {
+  jsonrpc: "2.0";
+  id: number;
+  result?: T;
+  error?: {
+    code: number;
+    message: string;
+  };
+}
+
+let requestId = 0;
+
+async function callRpc<T>(
+  method: string,
+  params: Record<string, unknown> = {}
+): Promise<T> {
+  const id = ++requestId;
+  const res = await fetch("/api/rpc2", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),
     credentials: "same-origin",
     cache: "no-store",
   });
   if (!res.ok) {
     throw new Error(`请求失败 (${res.status})`);
   }
-  const payload = (await res.json()) as ApiResponse<T>;
-  if (payload.status !== "success") {
-    throw new Error(payload.message || "接口返回错误");
+  const payload = (await res.json()) as RpcResponse<T>;
+  if (payload.error) {
+    throw new Error(payload.error.message || `RPC 错误 (${payload.error.code})`);
   }
-  return payload.data;
+  if (!("result" in payload)) {
+    throw new Error("RPC 返回缺少结果");
+  }
+  return payload.result as T;
 }
 
-export async function fetchPublicInfo(): Promise<PublicInfo | null> {
-  return getJson<PublicInfo>("/api/public");
+export async function fetchPublicInfo(): Promise<PublicInfo> {
+  return callRpc<PublicInfo>("public:getPublicSettings");
 }
 
 export async function fetchNodes(): Promise<NodeData[]> {
-  const data = await getJson<NodeData[]>("/api/nodes");
+  const data = await callRpc<NodeData[]>("public:getNodesInformation");
   return Array.isArray(data) ? data : [];
 }
 
-export async function fetchVersion(): Promise<{
-  version: string;
-  hash: string;
-}> {
-  try {
-    return await getJson<{ version: string; hash: string }>("/api/version");
-  } catch {
-    return { version: "unknown", hash: "unknown" };
-  }
+export async function fetchMetricDefinitions(): Promise<MetricDefinition[]> {
+  const data = await callRpc<MetricDefinition[]>("public:listMetricDefinitions");
+  return Array.isArray(data) ? data : [];
 }
 
 export async function fetchRecentStats(uuid: string): Promise<LiveStatus[]> {
-  const data = await getJson<NodeStats[]>(`/api/recent/${uuid}`);
+  const data = await callRpc<NodeStats[]>("public:getClientRecentRecords", {
+    uuid,
+  });
   if (!Array.isArray(data)) return [];
-  return data.map((s) => convertNodeStatsToLiveStatus(s, uuid, true));
+  return data.map((stats) => convertNodeStatsToLiveStatus(stats, true));
 }
 
 export async function fetchLoadHistory(
   uuid: string,
   hours = 24
-): Promise<{ count: number; records: HistoryRecord[] } | null> {
-  return getJson<{ count: number; records: HistoryRecord[] }>(
-    `/api/records/load?uuid=${encodeURIComponent(uuid)}&hours=${hours}`
-  );
+): Promise<{ records: HistoryRecord[] }> {
+  return callRpc("public:getRecordsByUUID", {
+    uuid,
+    hours: String(hours),
+  });
 }
 
 export async function fetchPingHistory(
   uuid: string,
   hours = 24
-): Promise<PingHistoryResponse | null> {
-  return getJson<PingHistoryResponse>(
-    `/api/records/ping?uuid=${encodeURIComponent(uuid)}&hours=${hours}`
-  );
+): Promise<PingHistoryResponse> {
+  return callRpc("public:getPingRecords", {
+    uuid,
+    hours: String(hours),
+  });
 }

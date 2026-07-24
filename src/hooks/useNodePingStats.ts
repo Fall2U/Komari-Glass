@@ -4,13 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchPingHistory } from "@/lib/api";
 import type { PingRecord } from "@/lib/types";
 
-export interface PingBar {
+interface PingBar {
   key: string;
   className: string;
   tooltip: string;
 }
 
-export interface NodePingStats {
+interface NodePingStats {
   avgLatency: number;
   avgLoss: number;
   hasData: boolean;
@@ -43,7 +43,7 @@ async function loadRecords(uuid: string, hours: number): Promise<PingRecord[]> {
 
   const promise = fetchPingHistory(uuid, hours)
     .then((res) => {
-      const records = res?.records || [];
+      const records = res.records;
       cache.set(key, { at: Date.now(), records });
       return records;
     })

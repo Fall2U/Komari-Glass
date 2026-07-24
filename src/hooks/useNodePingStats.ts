@@ -19,10 +19,6 @@ interface PingBar {
 }
 
 interface NodePingStats {
-  avgLatency: number;
-  avgLoss: number;
-  hasData: boolean;
-  loading: boolean;
   latencyDisplay: string;
   lossDisplay: string;
   latencyBars: PingBar[];
@@ -201,10 +197,6 @@ export function useNodePingStats(
       : emptyBars(loading ? "加载中" : "无采样数据");
 
     return {
-      avgLatency: stats.avgLatency,
-      avgLoss: stats.avgLoss,
-      hasData: stats.hasData,
-      loading,
       latencyDisplay: stats.hasData
         ? `${Math.round(stats.avgLatency)} ms`
         : loading

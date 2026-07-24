@@ -1,6 +1,6 @@
 import type { Appearance, AssetCurrency, ThemeSettings } from "./types";
 
-export const DEFAULT_THEME_SETTINGS: Required<
+const DEFAULT_THEME_SETTINGS: Required<
   Pick<
     ThemeSettings,
     | "defaultAppearance"

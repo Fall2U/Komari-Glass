@@ -50,4 +50,4 @@ komari-theme-glass-xxx.zip
 
 ## License
 
-MIT
+[MIT](LICENSE)

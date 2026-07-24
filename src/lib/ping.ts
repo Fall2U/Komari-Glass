@@ -6,7 +6,7 @@ import type {
   PingRecord,
 } from "./types";
 
-export interface PingHistoryPoint {
+interface PingHistoryPoint {
   time: string;
   latency: number | null;
   loss: number | null;
@@ -33,7 +33,7 @@ export type PingSource =
       records: PingRecord[];
     };
 
-export interface PingSummary {
+interface PingSummary {
   avgLatency: number;
   avgLoss: number;
   history: PingHistoryPoint[];

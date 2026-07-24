@@ -150,7 +150,7 @@ export function NodeCard({
         </div>
       </header>
 
-      <div className="node-card-content relative flex flex-1 flex-col gap-3 px-4 pb-4">
+      <div className="node-card-content relative flex flex-1 flex-col justify-between gap-3.5 px-4 pb-4">
         <div className="-mt-1 flex h-[19px] items-center gap-1.5 overflow-hidden">
           <span className="chip-pill shrink-0">
             在线 {getUptimeDays(node.uptime)} 天
@@ -165,7 +165,7 @@ export function NodeCard({
           ) : null}
         </div>
 
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
           <Metric
             label="CPU"
             value={`${node.cpu.toFixed(1)}%`}
@@ -385,7 +385,7 @@ function PingPanel({
   return (
     <div
       className={cn(
-        "node-data-panel group/ping-panel h-11 gap-1.5 !overflow-visible p-1.5",
+        "node-data-panel group/ping-panel h-11 gap-1.5 !overflow-visible p-2",
         dimmed && "blur-xs opacity-50"
       )}
     >

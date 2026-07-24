@@ -260,6 +260,11 @@ html[data-blur="off"] .glass-panel {
     inset 0 1px 0 rgb(255 255 255 / 0.45);
 }
 
+.dark .overview-strip {
+  border-color: rgb(255 255 255 / 0.07);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.2);
+}
+
 .overview-stat {
   position: relative;
   border-bottom: 1px solid var(--border);
@@ -283,11 +288,16 @@ html[data-blur="off"] .glass-panel {
 }
 
 .node-card {
+  min-height: 336px;
   border-color: var(--node-card-border);
   background: var(--node-card-bg);
   box-shadow: var(--node-card-shadow);
   transition: border-color 160ms ease, box-shadow 160ms ease,
     background-color 160ms ease;
+}
+
+html[data-theme-switching="true"] .node-card {
+  transition: none;
 }
 
 html[data-blur="on"] .node-card {
@@ -339,7 +349,7 @@ html[data-blur="off"] .node-card {
   gap: 0.125rem;
   overflow: hidden;
   border-radius: 8px;
-  padding: 0.375rem;
+  padding: 0.4375rem 0.5rem;
   background: var(--node-data-bg);
 }
 
@@ -512,7 +522,7 @@ html[data-blur="on"] .node-offline-overlay {
 
 @media (max-width: 639px) {
   .overview-stat {
-    min-height: 108px;
+    min-height: 100px;
   }
 }
 

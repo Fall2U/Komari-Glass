@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -117,6 +118,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [route, setRoute] = useState<Route>({ name: "home" });
   const [appearance, setAppearanceState] = useState<Appearance>("system");
   const [systemDark, setSystemDark] = useState(false);
+  const themeSwitchFrame = useRef<number | null>(null);
 
   const settings = useMemo(
     () => mergeThemeSettings(publicInfo?.theme_settings),
@@ -127,6 +129,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     appearance === "system" ? (systemDark ? "dark" : "light") : appearance;
 
   const setAppearance = useCallback((a: Appearance) => {
+    const root = document.documentElement;
+    const nextTheme =
+      a === "system" ? (getSystemDark() ? "dark" : "light") : a;
+
+    root.dataset.themeSwitching = "true";
+    root.classList.toggle("dark", nextTheme === "dark");
+    root.style.colorScheme = nextTheme;
+
+    if (themeSwitchFrame.current !== null) {
+      cancelAnimationFrame(themeSwitchFrame.current);
+    }
+    themeSwitchFrame.current = requestAnimationFrame(() => {
+      themeSwitchFrame.current = requestAnimationFrame(() => {
+        delete root.dataset.themeSwitching;
+        themeSwitchFrame.current = null;
+      });
+    });
+
     setAppearanceState(a);
     try {
       localStorage.setItem(APPEARANCE_KEY, a);
@@ -173,6 +193,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener("popstate", onPop);
       mql.removeEventListener("change", onScheme);
+      if (themeSwitchFrame.current !== null) {
+        cancelAnimationFrame(themeSwitchFrame.current);
+      }
+      delete document.documentElement.dataset.themeSwitching;
     };
   }, [refresh]);
 

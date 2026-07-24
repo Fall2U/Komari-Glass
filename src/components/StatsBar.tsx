@@ -33,8 +33,8 @@ function StatItem({
   valueClassName?: string;
 }) {
   return (
-    <div className="overview-stat min-w-0 px-4 py-4 sm:px-5 sm:py-[18px]">
-      <div className="mb-2.5 flex items-center justify-between gap-2 text-muted-foreground">
+    <div className="overview-stat min-w-0 px-4 py-3 sm:px-5 sm:py-3.5">
+      <div className="mb-2 flex items-center justify-between gap-2 text-muted-foreground">
         <span className="text-xs font-medium">{label}</span>
         <span className="stat-icon" aria-hidden="true">
           {icon}
@@ -53,7 +53,7 @@ function StatItem({
           </span>
         ) : null}
       </div>
-      <div className="mt-2 flex min-h-4 items-center gap-2 overflow-hidden text-[11px] text-muted-foreground sm:text-xs">
+      <div className="mt-1.5 flex min-h-4 items-center gap-2 overflow-hidden text-[11px] text-muted-foreground sm:text-xs">
         {children}
       </div>
     </div>

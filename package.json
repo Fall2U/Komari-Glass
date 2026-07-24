@@ -16,7 +16,6 @@
     "dev": "next dev",
     "build": "bun run typecheck && next build && bun scripts/package-theme.ts",
     "build:only": "next build",
-    "start": "next start",
     "typecheck": "next typegen && tsc --noEmit",
     "package": "bun scripts/package-theme.ts"
   },

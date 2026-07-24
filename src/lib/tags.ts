@@ -1,4 +1,4 @@
-export interface NodeTag {
+interface NodeTag {
   text: string;
   tone: "blue" | "green" | "orange" | "yellow" | "red" | "purple" | "gray";
 }

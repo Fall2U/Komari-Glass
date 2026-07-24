@@ -9,11 +9,11 @@ export function NodeGrid() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))]">
+      <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
         {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
-            className="glass-panel h-[304px] animate-pulse rounded-xl bg-foreground/5"
+            className="glass-panel h-[336px] animate-pulse rounded-xl bg-foreground/5"
           />
         ))}
       </div>
@@ -51,7 +51,7 @@ export function NodeGrid() {
   }
 
   return (
-    <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))]">
+    <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
       {nodes.map((node) => (
         <NodeCard
           key={node.uuid}

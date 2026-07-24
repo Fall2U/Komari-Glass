@@ -149,7 +149,10 @@ export function NodeCard({
             {node.online ? `在线 ${getUptimeDays(node.uptime)} 天` : "离线"}
           </span>
           {priceText ? (
-            <span className="chip-pill min-w-0 truncate" title={priceText}>
+            <span
+              className="chip-pill ml-auto min-w-0 truncate text-right"
+              title={priceText}
+            >
               {priceText}
             </span>
           ) : null}

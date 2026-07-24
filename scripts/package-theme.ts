@@ -5,6 +5,8 @@
  * ├── komari-theme.json
  * ├── preview.png
  * └── dist/
+ *     ├── preview.png
+ *     └── ...
  */
 import { createWriteStream, existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -100,6 +102,7 @@ async function main() {
     archive.file(themeJsonPath, { name: "komari-theme.json" });
     if (existsSync(previewPath)) {
       archive.file(previewPath, { name: "preview.png" });
+      archive.file(previewPath, { name: "dist/preview.png" });
     } else {
       console.warn("[package] preview.png missing — zip will omit preview.");
     }

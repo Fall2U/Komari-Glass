@@ -1,8 +1,13 @@
 {
   "name": "komari-theme-glass",
-  "version": "1.2.2",
+  "version": "1.2.4",
   "private": true,
-  "description": "A personal Glassmorphism theme for Komari Monitor 1.3.0",
+  "description": "一个轻量的Komari主题。",
+  "homepage": "https://github.com/imengying/Komari-Glass",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/imengying/Komari-Glass.git"
+  },
   "packageManager": "bun@1.3.14",
   "scripts": {
     "dev": "next dev",

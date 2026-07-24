@@ -1,14 +1,19 @@
 /**
  * Package Komari theme zip after Next.js static export.
  *
- * theme.zip
+ * release/theme.zip
  * ├── komari-theme.json
  * ├── preview.png
  * └── dist/
  *     ├── preview.png
  *     └── ...
  */
-import { createWriteStream, existsSync, readFileSync } from "node:fs";
+import {
+  createWriteStream,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+} from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
@@ -17,8 +22,9 @@ import archiver from "archiver";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const distDir = resolve(root, "dist");
+const releaseDir = resolve(root, "release");
 const themeJsonPath = resolve(root, "komari-theme.json");
-const previewPath = resolve(root, "preview.png");
+const previewPath = resolve(root, "public", "preview.png");
 
 function getCommitHash(): string {
   try {
@@ -85,7 +91,8 @@ async function main() {
   const version = getVersion();
   const hash = getCommitHash();
   const zipName = `komari-theme-glass-v${version}-${hash}.zip`;
-  const outputPath = resolve(root, zipName);
+  mkdirSync(releaseDir, { recursive: true });
+  const outputPath = resolve(releaseDir, zipName);
 
   await new Promise<void>((resolvePromise, reject) => {
     const output = createWriteStream(outputPath);
@@ -102,7 +109,9 @@ async function main() {
     archive.file(themeJsonPath, { name: "komari-theme.json" });
     if (existsSync(previewPath)) {
       archive.file(previewPath, { name: "preview.png" });
-      archive.file(previewPath, { name: "dist/preview.png" });
+      if (!existsSync(resolve(distDir, "preview.png"))) {
+        archive.file(previewPath, { name: "dist/preview.png" });
+      }
     } else {
       console.warn("[package] preview.png missing — zip will omit preview.");
     }

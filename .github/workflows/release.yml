@@ -61,7 +61,7 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: komari-theme-glass-${{ github.ref_name }}
-          path: komari-theme-glass-${{ github.ref_name }}-*.zip
+          path: release/komari-theme-glass-${{ github.ref_name }}-*.zip
           if-no-files-found: error
 
       - name: Publish GitHub release
@@ -69,4 +69,4 @@ jobs:
         with:
           generate_release_notes: true
           fail_on_unmatched_files: true
-          files: komari-theme-glass-${{ github.ref_name }}-*.zip
+          files: release/komari-theme-glass-${{ github.ref_name }}-*.zip

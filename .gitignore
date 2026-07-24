@@ -2,6 +2,7 @@ node_modules
 dist
 .next
 out
+release
 *.zip
 .DS_Store
 *.log

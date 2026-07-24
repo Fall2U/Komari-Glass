@@ -1,8 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { fetchPingHistory } from "@/lib/api";
-import type { PingRecord } from "@/lib/types";
+import {
+  fetchPingHistory,
+  fetchPingMetricSeries,
+  fetchPingMetricStats,
+} from "@/lib/api";
+import {
+  buildMetricPingSource,
+  summarizePingSource,
+  type PingSource,
+} from "@/lib/ping";
 
 interface PingBar {
   key: string;
@@ -21,38 +29,70 @@ interface NodePingStats {
   lossBars: PingBar[];
 }
 
-const BAR_COUNT = 20;
-const EMPTY_BARS = BAR_COUNT;
-
-// Shared in-memory cache so many cards don't stampede the API
-const cache = new Map<
-  string,
-  { at: number; records: PingRecord[]; promise?: Promise<PingRecord[]> }
->();
-const CACHE_TTL = 60_000;
-
-function cacheKey(uuid: string, hours: number) {
-  return `${uuid}:${hours}`;
+interface CacheEntry {
+  at: number;
+  data?: PingSource;
+  promise?: Promise<PingSource>;
 }
 
-async function loadRecords(uuid: string, hours: number): Promise<PingRecord[]> {
-  const key = cacheKey(uuid, hours);
+const BAR_COUNT = 20;
+const MAX_POINTS = 6000;
+const CACHE_TTL = 60_000;
+const REFRESH_INTERVAL = 60_000;
+const cache = new Map<string, CacheEntry>();
+
+async function fetchPingSource(
+  uuid: string,
+  hours: number
+): Promise<PingSource> {
+  const [statsResult, metricsResult] = await Promise.allSettled([
+    fetchPingMetricStats(uuid, hours, MAX_POINTS),
+    fetchPingMetricSeries(uuid, hours, MAX_POINTS),
+  ]);
+
+  if (
+    statsResult.status === "fulfilled" &&
+    metricsResult.status === "fulfilled"
+  ) {
+    const metricSource = buildMetricPingSource(
+      uuid,
+      statsResult.value,
+      metricsResult.value
+    );
+    if (metricSource) return metricSource;
+  }
+
+  const response = await fetchPingHistory(uuid, hours);
+  return { kind: "records", records: response.records };
+}
+
+async function loadPingSource(
+  uuid: string,
+  hours: number,
+  force = false
+): Promise<PingSource> {
+  const key = `${uuid}:${hours}`;
   const hit = cache.get(key);
   if (hit?.promise) return hit.promise;
-  if (hit && Date.now() - hit.at < CACHE_TTL) return hit.records;
+  if (!force && hit?.data && Date.now() - hit.at < CACHE_TTL) {
+    return hit.data;
+  }
 
-  const promise = fetchPingHistory(uuid, hours)
-    .then((res) => {
-      const records = res.records;
-      cache.set(key, { at: Date.now(), records });
-      return records;
+  const promise = fetchPingSource(uuid, hours)
+    .then((data) => {
+      cache.set(key, { at: Date.now(), data });
+      return data;
     })
-    .catch(() => {
-      cache.set(key, { at: Date.now(), records: [] });
-      return [] as PingRecord[];
+    .catch((error) => {
+      if (hit?.data) {
+        cache.set(key, { at: hit.at, data: hit.data });
+        return hit.data;
+      }
+      cache.delete(key);
+      throw error;
     });
 
-  cache.set(key, { at: 0, records: hit?.records || [], promise });
+  cache.set(key, { at: hit?.at ?? 0, data: hit?.data, promise });
   return promise;
 }
 
@@ -64,92 +104,20 @@ function latencyClass(ms: number): string {
   return "bg-signal-5";
 }
 
-function lossClass(pct: number): string {
-  if (pct <= 1) return "bg-signal-1";
-  if (pct <= 3) return "bg-signal-2";
-  if (pct <= 6) return "bg-signal-3";
-  if (pct <= 9) return "bg-signal-4";
+function lossClass(percent: number): string {
+  if (percent <= 1) return "bg-signal-1";
+  if (percent <= 3) return "bg-signal-2";
+  if (percent <= 6) return "bg-signal-3";
+  if (percent <= 9) return "bg-signal-4";
   return "bg-signal-5";
 }
 
 function emptyBars(label: string): PingBar[] {
-  return Array.from({ length: EMPTY_BARS }, (_, i) => ({
-    key: `empty-${label}-${i}`,
-    className: "bg-muted-foreground/15",
+  return Array.from({ length: BAR_COUNT }, (_, index) => ({
+    key: `empty-${index}`,
+    className: "bg-muted-foreground/10",
     tooltip: label,
   }));
-}
-
-function buildBuckets(records: PingRecord[]): {
-  history: Array<{ time: string; latency: number | null; loss: number | null }>;
-  avgLatency: number;
-  avgLoss: number;
-} {
-  if (!records.length) {
-    return { history: [], avgLatency: 0, avgLoss: 0 };
-  }
-
-  const sorted = [...records].sort(
-    (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime()
-  );
-  const first = new Date(sorted[0].time).getTime();
-  const last = new Date(sorted[sorted.length - 1].time).getTime();
-  const span = Math.max(last - first, 1);
-  const count = Math.min(BAR_COUNT, Math.max(sorted.length, 4));
-  const bucketSize = span / count;
-
-  const history: Array<{
-    time: string;
-    latency: number | null;
-    loss: number | null;
-  }> = [];
-
-  let idx = 0;
-  const allLatencies: number[] = [];
-  let totalSamples = 0;
-  let lostSamples = 0;
-
-  for (let i = 0; i < count; i++) {
-    const start = first + bucketSize * i;
-    const end = i === count - 1 ? last + 1 : start + bucketSize;
-    let latSum = 0;
-    let latN = 0;
-    let total = 0;
-    let lost = 0;
-
-    while (idx < sorted.length) {
-      const r = sorted[idx];
-      const t = new Date(r.time).getTime();
-      if (t >= end) break;
-      if (t >= start) {
-        total += 1;
-        totalSamples += 1;
-        if (r.value >= 0) {
-          latSum += r.value;
-          latN += 1;
-          allLatencies.push(r.value);
-        } else {
-          lost += 1;
-          lostSamples += 1;
-        }
-      }
-      idx += 1;
-    }
-
-    history.push({
-      time: new Date(start).toISOString(),
-      latency: latN ? latSum / latN : null,
-      loss: total ? (lost / total) * 100 : null,
-    });
-  }
-
-  return {
-    history,
-    avgLatency: allLatencies.length
-      ? allLatencies.reduce((a, b) => a + b, 0) / allLatencies.length
-      : 0,
-    avgLoss: totalSamples ? (lostSamples / totalSamples) * 100 : 0,
-  };
 }
 
 export function useNodePingStats(
@@ -157,77 +125,98 @@ export function useNodePingStats(
   enabled = true,
   hours = 1
 ): NodePingStats {
-  const [records, setRecords] = useState<PingRecord[]>([]);
+  const [source, setSource] = useState<PingSource | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!enabled || !uuid) {
-      setRecords([]);
+      setSource(null);
       setLoading(false);
       return;
     }
+
     let cancelled = false;
+    setSource(null);
     setLoading(true);
-    void loadRecords(uuid, hours).then((data) => {
-      if (!cancelled) {
-        setRecords(data);
-        setLoading(false);
+
+    const loadInitial = async () => {
+      try {
+        const data = await loadPingSource(uuid, hours);
+        if (!cancelled) setSource(data);
+      } catch {
+        if (!cancelled) setSource(null);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    });
+    };
+    const refresh = async () => {
+      try {
+        const data = await loadPingSource(uuid, hours, true);
+        if (!cancelled) setSource(data);
+      } catch {
+        // Keep the last successful sample visible during transient failures.
+      }
+    };
+
+    void loadInitial();
+    const timer = window.setInterval(() => {
+      void refresh();
+    }, REFRESH_INTERVAL);
+
     return () => {
       cancelled = true;
+      window.clearInterval(timer);
     };
   }, [uuid, enabled, hours]);
 
   return useMemo(() => {
-    const { history, avgLatency, avgLoss } = buildBuckets(records);
-    const hasData = history.some(
-      (h) => h.latency !== null || h.loss !== null
-    );
-
-    const latencyBars: PingBar[] = hasData
-      ? history.map((h, i) => ({
-          key: `lat-${h.time}-${i}`,
+    const stats = source
+      ? summarizePingSource(source)
+      : { avgLatency: 0, avgLoss: 0, history: [], hasData: false };
+    const latencyBars: PingBar[] = stats.history.length
+      ? stats.history.map((point, index) => ({
+          key: `latency-${point.time}-${index}`,
           className:
-            h.latency === null
+            point.latency === null
               ? "bg-muted-foreground/15"
-              : latencyClass(h.latency),
+              : latencyClass(point.latency),
           tooltip:
-            h.latency === null
-              ? `${new Date(h.time).toLocaleTimeString()}\n无采样`
-              : `${new Date(h.time).toLocaleTimeString()}\n${Math.round(h.latency)} ms`,
+            point.latency === null
+              ? `${new Date(point.time).toLocaleTimeString()}\n无采样数据`
+              : `${new Date(point.time).toLocaleTimeString()}\n${Math.round(point.latency)} ms`,
         }))
       : emptyBars(loading ? "加载中" : "无采样数据");
-
-    const lossBars: PingBar[] = hasData
-      ? history.map((h, i) => ({
-          key: `loss-${h.time}-${i}`,
+    const lossBars: PingBar[] = stats.history.length
+      ? stats.history.map((point, index) => ({
+          key: `loss-${point.time}-${index}`,
           className:
-            h.loss === null ? "bg-muted-foreground/15" : lossClass(h.loss),
+            point.loss === null
+              ? "bg-muted-foreground/15"
+              : lossClass(point.loss),
           tooltip:
-            h.loss === null
-              ? `${new Date(h.time).toLocaleTimeString()}\n无采样`
-              : `${new Date(h.time).toLocaleTimeString()}\n${h.loss.toFixed(1)}%`,
+            point.loss === null
+              ? `${new Date(point.time).toLocaleTimeString()}\n无采样数据`
+              : `${new Date(point.time).toLocaleTimeString()}\n${point.loss.toFixed(1)}%`,
         }))
       : emptyBars(loading ? "加载中" : "无采样数据");
 
     return {
-      avgLatency,
-      avgLoss,
-      hasData,
+      avgLatency: stats.avgLatency,
+      avgLoss: stats.avgLoss,
+      hasData: stats.hasData,
       loading,
-      latencyDisplay: hasData
-        ? `${Math.round(avgLatency)} ms`
+      latencyDisplay: stats.hasData
+        ? `${Math.round(stats.avgLatency)} ms`
         : loading
-          ? "…"
-          : "—",
-      lossDisplay: hasData
-        ? `${avgLoss.toFixed(1)}%`
+          ? "加载中"
+          : "-",
+      lossDisplay: stats.hasData
+        ? `${stats.avgLoss.toFixed(1)}%`
         : loading
-          ? "…"
-          : "—",
+          ? "加载中"
+          : "-",
       latencyBars,
       lossBars,
     };
-  }, [records, loading]);
+  }, [source, loading]);
 }

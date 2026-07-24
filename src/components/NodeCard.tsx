@@ -39,9 +39,11 @@ import type { DisplayNode } from "@/lib/types";
 
 export function NodeCard({
   node,
+  pingEnabled,
   onClick,
 }: {
   node: DisplayNode;
+  pingEnabled: boolean;
   onClick: () => void;
 }) {
   const memPct = safeDiv(node.ram, node.mem_total);
@@ -60,7 +62,7 @@ export function NodeCard({
     ? getRemainingValue(node.price, node.billing_cycle, node.expired_at)
     : 0;
   const tags = parseNodeTags(node.tags);
-  const ping = useNodePingStats(node.uuid, node.online, 1);
+  const ping = useNodePingStats(node.uuid, pingEnabled, 1);
   const offlineTime = formatOfflineTime(node.updated_at_live || node.updated_at);
 
   const priceText = paid

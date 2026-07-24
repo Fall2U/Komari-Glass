@@ -4,7 +4,7 @@
 
 技术栈：`bun` + `TypeScript` + `React` + `Next.js`。
 
-开发环境需要 Bun 1.3.x；生产构建建议同时提供 Node.js 20+，由 Bun 运行脚本、Next.js CLI 使用官方 Node 运行时。
+开发环境需要 Bun 1.3.x 和 Node.js 24，由 Bun 运行脚本、Next.js CLI 使用官方 Node 运行时。
 
 ## 开发
 

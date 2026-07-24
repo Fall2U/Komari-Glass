@@ -4,7 +4,8 @@ import { NodeCard } from "@/components/NodeCard";
 import { useApp } from "@/contexts/AppProvider";
 
 export function NodeGrid() {
-  const { nodes, goInstance, loading, error, refresh } = useApp();
+  const { nodes, metricRetention, goInstance, loading, error, refresh } =
+    useApp();
 
   if (loading) {
     return (
@@ -55,6 +56,7 @@ export function NodeGrid() {
         <NodeCard
           key={node.uuid}
           node={node}
+          pingEnabled={metricRetention.pingHours >= 1}
           onClick={() => goInstance(node.uuid)}
         />
       ))}

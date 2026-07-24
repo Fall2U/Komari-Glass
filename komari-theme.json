@@ -1,0 +1,168 @@
+{
+  "name": "Komari Glass",
+  "short": "Glass",
+  "description": "自用毛玻璃主题：顶部品牌栏 + 资产/流量/网速总览 + Glassmorphism 服务器卡片 + Purcarte 风格详情页",
+  "version": "1.0.0",
+  "author": "mengying",
+  "url": "",
+  "preview": "preview.png",
+  "configuration": {
+    "type": "managed",
+    "icon": "Sparkles",
+    "name": {
+      "zh-CN": "Glass 主题设置",
+      "en": "Glass Theme Settings"
+    },
+    "data": [
+      {
+        "name": {
+          "zh-CN": "基础外观",
+          "en": "Appearance"
+        },
+        "type": "title"
+      },
+      {
+        "key": "siteLogo",
+        "name": {
+          "zh-CN": "站点 Logo URL",
+          "en": "Site Logo URL"
+        },
+        "type": "string",
+        "default": "",
+        "help": {
+          "zh-CN": "留空则使用默认图标；支持绝对 URL 或站内路径",
+          "en": "Leave empty for default icon"
+        }
+      },
+      {
+        "key": "defaultAppearance",
+        "name": {
+          "zh-CN": "默认主题模式",
+          "en": "Default Appearance"
+        },
+        "type": "select",
+        "options": "system,light,dark",
+        "default": "system",
+        "help": {
+          "zh-CN": "system 跟随系统；light 浅色；dark 深色。用户本地选择会覆盖此默认值。",
+          "en": "system follows OS; user local choice overrides this."
+        }
+      },
+      {
+        "key": "enableBlur",
+        "name": {
+          "zh-CN": "启用毛玻璃效果",
+          "en": "Enable Glass Blur"
+        },
+        "type": "switch",
+        "default": true
+      },
+      {
+        "key": "backgroundImage",
+        "name": {
+          "zh-CN": "背景图片 URL",
+          "en": "Background Image URL"
+        },
+        "type": "string",
+        "default": "",
+        "help": {
+          "zh-CN": "支持用 | 分隔浅色/深色背景，例如 light.jpg|dark.jpg",
+          "en": "Use | to separate light/dark backgrounds"
+        }
+      },
+      {
+        "name": {
+          "zh-CN": "首页总览",
+          "en": "Overview"
+        },
+        "type": "title"
+      },
+      {
+        "key": "showStatsBar",
+        "name": {
+          "zh-CN": "显示总览统计条",
+          "en": "Show Stats Bar"
+        },
+        "type": "switch",
+        "default": true
+      },
+      {
+        "key": "showOnline",
+        "name": {
+          "zh-CN": "显示在线",
+          "en": "Show Online"
+        },
+        "type": "switch",
+        "default": true,
+        "help": {
+          "zh-CN": "总览条显示在线节点数",
+          "en": "Show online node count"
+        }
+      },
+      {
+        "key": "showAssets",
+        "name": {
+          "zh-CN": "显示资产",
+          "en": "Show Assets"
+        },
+        "type": "switch",
+        "default": true,
+        "help": {
+          "zh-CN": "总览条显示总价值与剩余价值",
+          "en": "Show total and remaining value"
+        }
+      },
+      {
+        "key": "showTraffic",
+        "name": {
+          "zh-CN": "显示累计流量",
+          "en": "Show Traffic"
+        },
+        "type": "switch",
+        "default": true,
+        "help": {
+          "zh-CN": "总览条显示累计流量",
+          "en": "Show total traffic"
+        }
+      },
+      {
+        "key": "showSpeed",
+        "name": {
+          "zh-CN": "显示实时网速",
+          "en": "Show Network Speed"
+        },
+        "type": "switch",
+        "default": true,
+        "help": {
+          "zh-CN": "总览条显示实时网速",
+          "en": "Show realtime speed"
+        }
+      },
+      {
+        "name": {
+          "zh-CN": "节点卡片",
+          "en": "Node Cards"
+        },
+        "type": "title"
+      },
+      {
+        "key": "offlineLast",
+        "name": {
+          "zh-CN": "离线节点置底",
+          "en": "Offline Nodes Last"
+        },
+        "type": "switch",
+        "default": true
+      },
+      {
+        "key": "hideAdminWhenLoggedOut",
+        "name": {
+          "zh-CN": "未登录隐藏后台入口",
+          "en": "Hide Admin When Logged Out"
+        },
+        "type": "switch",
+        "default": false
+      }
+    ]
+  }
+}

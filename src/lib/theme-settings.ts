@@ -1,0 +1,101 @@
+import type { Appearance, ThemeSettings } from "./types";
+
+export const DEFAULT_THEME_SETTINGS: Required<
+  Pick<
+    ThemeSettings,
+    | "siteLogo"
+    | "defaultAppearance"
+    | "enableBlur"
+    | "backgroundImage"
+    | "showStatsBar"
+    | "showOnline"
+    | "showAssets"
+    | "showTraffic"
+    | "showSpeed"
+    | "offlineLast"
+    | "hideAdminWhenLoggedOut"
+  >
+> = {
+  siteLogo: "",
+  defaultAppearance: "system",
+  enableBlur: true,
+  backgroundImage: "",
+  showStatsBar: true,
+  showOnline: true,
+  showAssets: true,
+  // 默认四项：在线 / 资产 / 累计流量 / 实时网速
+  showTraffic: true,
+  showSpeed: true,
+  offlineLast: true,
+  hideAdminWhenLoggedOut: false,
+};
+
+export function mergeThemeSettings(
+  raw: ThemeSettings | null | undefined
+): typeof DEFAULT_THEME_SETTINGS {
+  const src = raw || {};
+
+  // Backward-compat: old showOnlineAssets maps to both online + assets
+  const legacyAssets = src.showOnlineAssets;
+  const hasLegacy = legacyAssets !== undefined && legacyAssets !== null;
+
+  return {
+    siteLogo: String(src.siteLogo ?? DEFAULT_THEME_SETTINGS.siteLogo),
+    defaultAppearance: normalizeAppearance(
+      src.defaultAppearance,
+      DEFAULT_THEME_SETTINGS.defaultAppearance
+    ),
+    enableBlur: bool(src.enableBlur, DEFAULT_THEME_SETTINGS.enableBlur),
+    backgroundImage: String(
+      src.backgroundImage ?? DEFAULT_THEME_SETTINGS.backgroundImage
+    ),
+    showStatsBar: bool(src.showStatsBar, DEFAULT_THEME_SETTINGS.showStatsBar),
+    showOnline: bool(
+      src.showOnline,
+      hasLegacy
+        ? bool(legacyAssets, true)
+        : DEFAULT_THEME_SETTINGS.showOnline
+    ),
+    showAssets: bool(
+      src.showAssets,
+      hasLegacy
+        ? bool(legacyAssets, true)
+        : DEFAULT_THEME_SETTINGS.showAssets
+    ),
+    showTraffic: bool(src.showTraffic, DEFAULT_THEME_SETTINGS.showTraffic),
+    showSpeed: bool(src.showSpeed, DEFAULT_THEME_SETTINGS.showSpeed),
+    offlineLast: bool(src.offlineLast, DEFAULT_THEME_SETTINGS.offlineLast),
+    hideAdminWhenLoggedOut: bool(
+      src.hideAdminWhenLoggedOut,
+      DEFAULT_THEME_SETTINGS.hideAdminWhenLoggedOut
+    ),
+  };
+}
+
+function bool(value: unknown, fallback: boolean): boolean {
+  if (typeof value === "boolean") return value;
+  if (value === "true" || value === 1 || value === "1") return true;
+  if (value === "false" || value === 0 || value === "0") return false;
+  return fallback;
+}
+
+function normalizeAppearance(
+  value: unknown,
+  fallback: Appearance
+): Appearance {
+  if (value === "light" || value === "dark" || value === "system") return value;
+  return fallback;
+}
+
+/** Parse "lightUrl|darkUrl" background config */
+export function resolveBackground(
+  raw: string,
+  isDark: boolean
+): string | null {
+  if (!raw?.trim()) return null;
+  const parts = raw.split("|").map((s) => s.trim());
+  if (parts.length === 1) return parts[0] || null;
+  return (isDark ? parts[1] || parts[0] : parts[0]) || null;
+}
+
+export const APPEARANCE_KEY = "appearance";

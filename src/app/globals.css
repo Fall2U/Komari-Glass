@@ -1,0 +1,381 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Palette aligned with Komari Glassmorphism (emerald glass tokens)
+ * Ref: sanrokamlan-prog/komari-theme-Glassmorphism
+ */
+:root {
+  --background: oklch(0.935 0.015 252);
+  --foreground: oklch(0.11 0.01 285.823);
+  --card: #f1f5f9bd;
+  --card-hover: #f8fafccc;
+  --card-solid: #f1f5f9;
+  --card-foreground: #10151c;
+  --primary: oklch(0.21 0.006 285.885);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: #374151;
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.577 0.245 27.325);
+  --warning: oklch(0.768 0.155 70);
+  --success: oklch(0.696 0.17 162.48);
+  --info: oklch(0.6 0.118 230);
+  --selection: oklch(0.55 0.15 155);
+  --border: #cbd5e199;
+  --ring: oklch(0.705 0.015 286.067);
+  --signal-1: #059669;
+  --signal-2: #4ade80;
+  --signal-3: #a3e635;
+  --signal-4: #facc15;
+  --signal-5: #f43f5e;
+  --glass-blur: 16px;
+  --glass-bg: #f1f5f9bd;
+  --glass-border: #cbd5e199;
+  --glass-shadow: 0 8px 28px rgb(15 23 42 / 0.18);
+  --glass-control: #e2e8f0c2;
+  --page-gradient: radial-gradient(
+      1200px 600px at 8% -8%,
+      rgb(167 243 208 / 0.35),
+      transparent 55%
+    ),
+    radial-gradient(
+      900px 480px at 100% 0%,
+      rgb(186 230 253 / 0.4),
+      transparent 50%
+    ),
+    linear-gradient(180deg, oklch(0.955 0.012 250), oklch(0.92 0.014 252));
+}
+
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: #0d111ad9;
+  --card-hover: #111827e8;
+  --card-solid: #0d111a;
+  --card-foreground: #f8fafc;
+  --primary: oklch(0.92 0.004 286.32);
+  --primary-foreground: oklch(0.21 0.006 285.885);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: #d6dae4;
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --warning: oklch(0.79 0.16 70);
+  --success: oklch(0.74 0.17 162);
+  --info: oklch(0.68 0.13 230);
+  --selection: oklch(0.74 0.17 162);
+  --border: #ffffff2e;
+  --ring: oklch(0.552 0.016 285.938);
+  --signal-1: #10b981;
+  --signal-2: #4ade80;
+  --signal-3: #a3e635;
+  --signal-4: #fde047;
+  --signal-5: #fb7185;
+  --glass-bg: #0d111ad9;
+  --glass-border: #ffffff2e;
+  --glass-shadow: 0 8px 30px rgb(0 0 0 / 0.48);
+  --glass-control: #101624d9;
+  --page-gradient: radial-gradient(
+      1000px 520px at 0% 0%,
+      rgb(6 78 59 / 0.35),
+      transparent 55%
+    ),
+    radial-gradient(
+      800px 420px at 100% 8%,
+      rgb(30 58 138 / 0.28),
+      transparent 50%
+    ),
+    linear-gradient(180deg, oklch(0.145 0.01 285), oklch(0.12 0.01 280));
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-destructive: var(--destructive);
+  --color-info: var(--info);
+  --color-selection: var(--selection);
+  --color-ring: var(--ring);
+  --color-signal-1: var(--signal-1);
+  --color-signal-2: var(--signal-2);
+  --color-signal-3: var(--signal-3);
+  --color-signal-4: var(--signal-4);
+  --color-signal-5: var(--signal-5);
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC",
+    "Noto Sans SC", "Microsoft YaHei", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--foreground) 22%, transparent)
+    transparent;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: var(--page-gradient);
+  pointer-events: none;
+}
+
+#theme-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+#theme-background::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in oklch, var(--background) 28%, transparent);
+}
+
+/* Glassmorphism panel — emerald glass */
+.glass-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  color: var(--card-foreground);
+}
+
+html[data-blur="on"] .glass-panel {
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.45);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.45);
+}
+
+html[data-blur="off"] .glass-panel {
+  background: var(--card-solid);
+}
+
+.glass-panel:hover {
+  background: var(--card-hover);
+}
+
+/* Header: transparent, no box (Glassmorphism) */
+.site-header {
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    backdrop-filter 0.2s ease;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  color: var(--foreground);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.icon-btn:hover {
+  background: color-mix(in oklch, var(--foreground) 8%, transparent);
+}
+
+.icon-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.text-selection {
+  color: var(--selection);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.625rem;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  padding: 0.55rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.btn-primary:hover {
+  opacity: 0.92;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/*
+ * Glass NodeCard metric boxes:
+ * class "bg-slate-500/5" overridden in Glassmorphism main.css to translucent white
+ */
+.metric-box {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.125rem; /* gap-0.5 */
+  overflow: hidden;
+  border-radius: 0.5rem; /* rounded-lg like Glass */
+  background: rgb(100 116 139 / 0.05); /* slate-500/5 fallback */
+  padding: 0.375rem 0.375rem; /* px-1.5 py-1.5 */
+}
+
+html[data-blur="on"] .metric-box {
+  background: rgb(255 255 255 / 0.15);
+}
+
+.dark .metric-box,
+html.dark .metric-box {
+  background: rgb(100 116 139 / 0.05);
+}
+
+html.dark[data-blur="on"] .metric-box {
+  background: rgb(255 255 255 / 0.05);
+}
+
+.metric-box-ping {
+  padding: 0.5rem; /* p-2 like Glass ping panel */
+  gap: 0.375rem; /* gap-1.5 */
+}
+
+/* online / price pills — Glass: bg-slate-500/10 */
+.chip-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  background: rgb(100 116 139 / 0.1);
+  padding: 0.125rem 0.5rem;
+  font-size: 11px;
+  line-height: 1.25;
+  color: var(--muted-foreground);
+}
+
+.dark .chip-pill,
+html.dark .chip-pill {
+  background: rgb(100 116 139 / 0.18);
+}
+
+/* node card: slightly tighter glass, no heavy outer ring by default */
+.node-card.glass-panel {
+  border: none;
+  /* backdrop-filter + border-radius can clip children; keep title fully visible */
+  overflow: visible;
+}
+
+.node-card.glass-panel:hover {
+  /* Glass uses border-none + soft lift via shadow, keep hover fill subtle */
+  background: var(--card-hover);
+}
+
+/* Title row: enough vertical room so CJK glyphs are not clipped */
+.node-card-header {
+  overflow: visible;
+  line-height: normal;
+}
+
+.node-card-title {
+  /* truncate needs overflow hidden, but keep real line-height for glyph tops */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.25rem; /* leading-5 */
+  padding-block: 1px; /* tiny breathing room under filter/clip edge cases */
+}
+
+.bg-signal-1 {
+  background-color: var(--signal-1);
+}
+.bg-signal-2 {
+  background-color: var(--signal-2);
+}
+.bg-signal-3 {
+  background-color: var(--signal-3);
+}
+.bg-signal-4 {
+  background-color: var(--signal-4);
+}
+.bg-signal-5 {
+  background-color: var(--signal-5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Firefox: reduce expensive blur layers */
+@supports (-moz-appearance: none) {
+  html[data-blur="on"] .glass-panel {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: color-mix(in srgb, var(--card-solid) 88%, #e2e8f0);
+  }
+
+  .dark html[data-blur="on"] .glass-panel,
+  html.dark[data-blur="on"] .glass-panel {
+    background: color-mix(in srgb, var(--card-solid) 92%, black);
+  }
+}

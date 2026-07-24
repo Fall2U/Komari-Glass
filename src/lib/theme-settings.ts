@@ -12,7 +12,6 @@ export const DEFAULT_THEME_SETTINGS: Required<
     | "showAssets"
     | "showTraffic"
     | "showSpeed"
-    | "hideAdminWhenLoggedOut"
   >
 > = {
   defaultAppearance: "system",
@@ -25,7 +24,6 @@ export const DEFAULT_THEME_SETTINGS: Required<
   // 默认四项：在线 / 资产 / 累计流量 / 实时网速
   showTraffic: true,
   showSpeed: true,
-  hideAdminWhenLoggedOut: false,
 };
 
 export function mergeThemeSettings(
@@ -65,10 +63,6 @@ export function mergeThemeSettings(
     ),
     showTraffic: bool(src.showTraffic, DEFAULT_THEME_SETTINGS.showTraffic),
     showSpeed: bool(src.showSpeed, DEFAULT_THEME_SETTINGS.showSpeed),
-    hideAdminWhenLoggedOut: bool(
-      src.hideAdminWhenLoggedOut,
-      DEFAULT_THEME_SETTINGS.hideAdminWhenLoggedOut
-    ),
   };
 }
 

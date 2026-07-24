@@ -205,13 +205,6 @@ html[data-blur="off"] .glass-panel {
   background: var(--card-solid);
 }
 
-.site-header {
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--background) 82%, transparent);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  backdrop-filter: blur(18px) saturate(1.2);
-}
-
 .brand-link {
   border-radius: 8px;
   outline: none;
@@ -470,10 +463,6 @@ html[data-blur="on"] .node-offline-overlay {
   box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 22%, transparent);
 }
 
-.detail-info-item + .detail-info-item {
-  border-top: 1px solid var(--border);
-}
-
 .recharts-cartesian-axis-tick-value,
 .recharts-legend-item-text {
   fill: var(--muted-foreground);
@@ -503,6 +492,12 @@ html[data-blur="on"] .node-offline-overlay {
 @media (min-width: 1024px) {
   .overview-strip.grid-cols-2.lg\:grid-cols-4 .overview-stat,
   .overview-strip.grid-cols-2.lg\:grid-cols-3 .overview-stat {
+    border-bottom: 0;
+  }
+}
+
+@media (min-width: 640px) {
+  .overview-strip.sm\:grid-cols-3 .overview-stat {
     border-bottom: 0;
   }
 }

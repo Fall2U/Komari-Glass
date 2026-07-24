@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { fetchMe, fetchNodes, fetchPublicInfo } from "@/lib/api";
+import { fetchNodes, fetchPublicInfo } from "@/lib/api";
 import { calcOverview, mergeNodes } from "@/lib/metrics";
 import { navigate, parsePath, toPath } from "@/lib/router";
 import {
@@ -22,7 +22,6 @@ import type {
   Appearance,
   DisplayNode,
   LiveStatusMap,
-  Me,
   NodeData,
   PublicInfo,
   Route,
@@ -32,7 +31,6 @@ interface AppContextValue {
   loading: boolean;
   error: string | null;
   publicInfo: PublicInfo | null;
-  me: Me | null;
   nodes: DisplayNode[];
   rawNodes: NodeData[];
   liveMap: LiveStatusMap | null;
@@ -46,7 +44,6 @@ interface AppContextValue {
   goInstance: (uuid: string) => void;
   refresh: () => Promise<void>;
   sitename: string;
-  isLoggedIn: boolean;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -75,7 +72,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [publicInfo, setPublicInfo] = useState<PublicInfo | null>(null);
-  const [me, setMe] = useState<Me | null>(null);
   const [rawNodes, setRawNodes] = useState<NodeData[]>([]);
   const [liveMap, setLiveMap] = useState<LiveStatusMap | null>(null);
   const [route, setRoute] = useState<Route>({ name: "home" });
@@ -102,13 +98,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     try {
       setError(null);
-      const [pub, user, nodes] = await Promise.all([
+      const [pub, nodes] = await Promise.all([
         fetchPublicInfo(),
-        fetchMe(),
         fetchNodes(),
       ]);
       setPublicInfo(pub);
-      setMe(user);
       setRawNodes(nodes);
 
       // init appearance from localStorage or theme default
@@ -229,7 +223,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     loading,
     error,
     publicInfo,
-    me,
     nodes,
     rawNodes,
     liveMap,
@@ -243,7 +236,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     goInstance,
     refresh,
     sitename: publicInfo?.sitename || "Komari Monitor",
-    isLoggedIn: Boolean(me?.logged_in),
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

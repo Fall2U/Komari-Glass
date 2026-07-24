@@ -1,6 +1,6 @@
 # Komari Glass
 
-技术栈：`bun` + `TypeScript` + `React` + `Next.js`（。
+技术栈：`bun` + `TypeScript` + `React` + `Next.js`。
 
 开发环境需要 Bun 1.3.x；生产构建建议同时提供 Node.js 20+，由 Bun 运行脚本、Next.js CLI 使用官方 Node 运行时。
 
@@ -42,7 +42,7 @@ komari-theme-glass-xxx.zip
 ## 兼容性
 
 - 目标服务端：**Komari 1.3.0**
-- 数据接口：`/api/public`、`/api/nodes`、`/api/me`、`/api/clients`（WS）、`/api/records/*`
+- 数据接口：`/api/public`、`/api/nodes`、`/api/clients`（WS）、`/api/records/*`
 - 特殊路径不接管：`/admin`、`/terminal` 仍由官方界面处理
 - 页脚保留：`Powered by Komari Monitor.`
 

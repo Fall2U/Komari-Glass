@@ -20,9 +20,7 @@ interface ChartPoint {
   label: string;
   cpu: number;
   ram: number;
-  ram_total: number;
   disk: number;
-  disk_total: number;
   net_in: number;
   net_out: number;
   load: number;
@@ -37,9 +35,7 @@ function toPoints(records: HistoryRecord[]): ChartPoint[] {
         label: new Date(r.time).toLocaleString(),
         cpu: r.cpu ?? 0,
         ram: r.ram ?? 0,
-        ram_total: r.ram_total ?? 0,
         disk: r.disk ?? 0,
-        disk_total: r.disk_total ?? 0,
         net_in: r.net_in ?? 0,
         net_out: r.net_out ?? 0,
         load: r.load ?? 0,
@@ -57,6 +53,10 @@ function tickLabel(ts: number, hours: number): string {
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
   return d.toLocaleDateString([], { month: "2-digit", day: "2-digit", hour: "2-digit" });
+}
+
+function resourceTicks(total: number): number[] {
+  return Array.from({ length: 5 }, (_, index) => (total * index) / 4);
 }
 
 function ChartCard({
@@ -158,6 +158,14 @@ export function LoadCharts({
   }
 
   const last = data[data.length - 1];
+  const memoryTotal =
+    node.mem_total > 0
+      ? node.mem_total
+      : Math.max(...data.map((point) => point.ram), 1);
+  const diskTotal =
+    node.disk_total > 0
+      ? node.disk_total
+      : Math.max(...data.map((point) => point.disk), 1);
   const colors = {
     cpu: "#f43f5e",
     ram: "#0ea5a5",
@@ -212,7 +220,7 @@ export function LoadCharts({
 
       <ChartCard
         title="内存"
-        value={`${formatBytes(last.ram)} / ${formatBytes(last.ram_total || node.mem_total)}`}
+        value={`${formatBytes(last.ram)} / ${formatBytes(memoryTotal)}`}
       >
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
@@ -226,8 +234,11 @@ export function LoadCharts({
               minTickGap={30}
             />
             <YAxis
+              domain={[0, memoryTotal]}
+              ticks={resourceTicks(memoryTotal)}
+              allowDataOverflow
               tick={{ fontSize: 10 }}
-              width={48}
+              width={56}
               tickFormatter={(v) => formatBytes(v as number, 0)}
             />
             <Tooltip
@@ -260,7 +271,7 @@ export function LoadCharts({
 
       <ChartCard
         title="硬盘"
-        value={`${formatBytes(last.disk)} / ${formatBytes(last.disk_total || node.disk_total)}`}
+        value={`${formatBytes(last.disk)} / ${formatBytes(diskTotal)}`}
       >
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
@@ -274,8 +285,11 @@ export function LoadCharts({
               minTickGap={30}
             />
             <YAxis
+              domain={[0, diskTotal]}
+              ticks={resourceTicks(diskTotal)}
+              allowDataOverflow
               tick={{ fontSize: 10 }}
-              width={48}
+              width={56}
               tickFormatter={(v) => formatBytes(v as number, 0)}
             />
             <Tooltip

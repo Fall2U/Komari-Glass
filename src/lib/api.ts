@@ -3,7 +3,6 @@ import type {
   ApiResponse,
   HistoryRecord,
   LiveStatus,
-  Me,
   NodeData,
   NodeStats,
   PingHistoryResponse,
@@ -32,16 +31,6 @@ export async function fetchPublicInfo(): Promise<PublicInfo | null> {
 export async function fetchNodes(): Promise<NodeData[]> {
   const data = await getJson<NodeData[]>("/api/nodes");
   return Array.isArray(data) ? data : [];
-}
-
-export async function fetchMe(): Promise<Me | null> {
-  try {
-    const res = await fetch("/api/me", { credentials: "same-origin" });
-    if (!res.ok) return null;
-    return (await res.json()) as Me;
-  } catch {
-    return null;
-  }
 }
 
 export async function fetchVersion(): Promise<{

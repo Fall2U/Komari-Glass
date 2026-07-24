@@ -6,18 +6,15 @@ import { useApp } from "@/contexts/AppProvider";
 export function Header() {
   const {
     sitename,
-    settings,
     resolvedTheme,
     setAppearance,
     goHome,
-    isLoggedIn,
   } = useApp();
 
-  const showAdmin = isLoggedIn || !settings.hideAdminWhenLoggedOut;
   const isDark = resolvedTheme === "dark";
 
   return (
-    <header className="site-header sticky top-0 z-40 w-full">
+    <header className="site-header w-full">
       <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
         <button
           type="button"
@@ -30,7 +27,7 @@ export function Header() {
           <img
             src="/favicon.ico"
             alt=""
-            className="size-9 shrink-0 rounded-lg object-contain"
+            className="size-9 shrink-0 object-contain"
           />
           <span className="truncate text-[17px] font-semibold tracking-normal sm:text-lg">
             {sitename}
@@ -52,16 +49,14 @@ export function Header() {
             )}
           </button>
 
-          {showAdmin ? (
-            <a
-              href="/admin"
-              className="icon-btn"
-              aria-label="进入后台"
-              title="进入后台"
-            >
-              <Settings className="size-[18px]" />
-            </a>
-          ) : null}
+          <a
+            href="/admin"
+            className="icon-btn"
+            aria-label="进入后台"
+            title="进入后台"
+          >
+            <Settings className="size-[18px]" />
+          </a>
         </div>
       </div>
     </header>

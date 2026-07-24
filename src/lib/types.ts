@@ -18,7 +18,6 @@ export interface ThemeSettings {
   showAssets?: boolean;
   showTraffic?: boolean;
   showSpeed?: boolean;
-  hideAdminWhenLoggedOut?: boolean;
   [key: string]: unknown;
 }
 
@@ -37,15 +36,6 @@ export interface PublicInfo {
   custom_head: string;
   custom_body: string;
   cors_origin_check_enabled?: boolean;
-}
-
-export interface Me {
-  logged_in: boolean;
-  username?: string;
-  "2fa_enabled"?: boolean;
-  sso_id?: string;
-  sso_type?: string;
-  uuid?: string;
 }
 
 export type TrafficLimitType = "sum" | "max" | "min" | "up" | "down";

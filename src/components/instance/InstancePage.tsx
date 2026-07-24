@@ -7,7 +7,6 @@ import {
   CalendarDays,
   Coins,
   RadioTower,
-  ReceiptText,
 } from "lucide-react";
 import { Flag } from "@/components/Flag";
 import { InstanceInfo } from "@/components/instance/InstanceInfo";
@@ -18,7 +17,6 @@ import { useApp } from "@/contexts/AppProvider";
 import {
   formatCurrencyValue,
   formatExpireRemaining,
-  formatPriceWithCycle,
   getExpireStatus,
   getMonthlyCost,
   getRemainingValue,
@@ -146,16 +144,7 @@ export function InstancePage({ uuid }: { uuid: string }) {
         </div>
       </section>
 
-      <section className="overview-strip glass-panel grid grid-cols-2 overflow-hidden rounded-lg lg:grid-cols-4">
-        <SummaryMetric
-          label="节点价格"
-          icon={<ReceiptText />}
-          value={formatPriceWithCycle(
-            node.price,
-            node.billing_cycle,
-            node.currency || "¥"
-          )}
-        />
+      <section className="overview-strip glass-panel grid grid-cols-1 overflow-hidden rounded-lg sm:grid-cols-3">
         <SummaryMetric
           label="月均支出"
           icon={<Coins />}

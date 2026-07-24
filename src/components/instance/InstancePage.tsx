@@ -4,8 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   ArrowLeft,
-  CalendarDays,
-  Coins,
   RadioTower,
 } from "lucide-react";
 import { Flag } from "@/components/Flag";
@@ -14,14 +12,6 @@ import { LoadCharts } from "@/components/instance/LoadCharts";
 import { PingChart } from "@/components/instance/PingChart";
 import { Loading } from "@/components/Loading";
 import { useApp } from "@/contexts/AppProvider";
-import {
-  formatCurrencyValue,
-  formatExpireRemaining,
-  getExpireStatus,
-  getMonthlyCost,
-  getRemainingValue,
-  isPaidPrice,
-} from "@/lib/billing";
 import { cn } from "@/lib/cn";
 import { getOSImage, getOSName } from "@/lib/os";
 import { getRegionDisplayName } from "@/lib/region";
@@ -78,14 +68,6 @@ export function InstancePage({ uuid }: { uuid: string }) {
   }
 
   const tags = parseNodeTags(node.tags);
-  const paid = isPaidPrice(node.price);
-  const monthlyCost = getMonthlyCost(node.price, node.billing_cycle);
-  const remainingValue = getRemainingValue(
-    node.price,
-    node.billing_cycle,
-    node.expired_at
-  );
-  const expireStatus = getExpireStatus(node.expired_at);
 
   return (
     <div className="space-y-3.5">
@@ -142,39 +124,6 @@ export function InstancePage({ uuid }: { uuid: string }) {
             </div>
           ) : null}
         </div>
-      </section>
-
-      <section className="overview-strip glass-panel grid grid-cols-1 overflow-hidden rounded-lg sm:grid-cols-3">
-        <SummaryMetric
-          label="月均支出"
-          icon={<Coins />}
-          value={
-            monthlyCost === null
-              ? "--"
-              : `${formatCurrencyValue(monthlyCost, node.currency || "¥")} / 月`
-          }
-        />
-        <SummaryMetric
-          label="剩余时间"
-          icon={<CalendarDays />}
-          value={formatExpireRemaining(node.expired_at)}
-          valueClassName={cn(
-            expireStatus === "critical" || expireStatus === "expired"
-              ? "text-destructive"
-              : expireStatus === "warning"
-                ? "text-warning"
-                : "text-success"
-          )}
-        />
-        <SummaryMetric
-          label="剩余价值"
-          icon={<Coins />}
-          value={
-            paid
-              ? formatCurrencyValue(remainingValue, node.currency || "¥")
-              : "--"
-          }
-        />
       </section>
 
       <InstanceInfo node={node} />
@@ -237,38 +186,6 @@ export function InstancePage({ uuid }: { uuid: string }) {
           )}
         </div>
       </section>
-    </div>
-  );
-}
-
-function SummaryMetric({
-  label,
-  icon,
-  value,
-  valueClassName,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  value: string;
-  valueClassName?: string;
-}) {
-  return (
-    <div className="overview-stat min-w-0 px-4 py-3.5 sm:px-5">
-      <div className="mb-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-        <span>{label}</span>
-        <span className="text-primary [&>svg]:size-4" aria-hidden="true">
-          {icon}
-        </span>
-      </div>
-      <p
-        className={cn(
-          "truncate text-lg font-semibold tabular-nums sm:text-xl",
-          valueClassName
-        )}
-        title={value}
-      >
-        {value}
-      </p>
     </div>
   );
 }

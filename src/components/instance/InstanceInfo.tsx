@@ -99,14 +99,14 @@ export function InstanceInfo({ node }: { node: DisplayNode }) {
             value={node.os || "--"}
           />
           <InfoItem
-            label="内核版本"
-            icon={<Cpu />}
-            value={node.kernel_version || "--"}
-          />
-          <InfoItem
             label="运行时间"
             icon={<Radio />}
             value={node.online ? formatUptime(node.uptime) : "--"}
+          />
+          <InfoItem
+            label="内核版本"
+            icon={<Cpu />}
+            value={node.kernel_version || "--"}
             className="border-t border-border"
           />
           <InfoItem

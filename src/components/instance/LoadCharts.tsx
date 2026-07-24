@@ -69,12 +69,12 @@ function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="glass-panel rounded-2xl p-4">
+    <div className="glass-panel rounded-lg p-4">
       <div className="mb-2 flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold">{title}</h3>
         <span className="text-xs tabular-nums text-muted-foreground">{value}</span>
       </div>
-      <div className="h-48 w-full">{children}</div>
+      <div className="h-48 w-full sm:h-52">{children}</div>
     </div>
   );
 }
@@ -144,14 +144,14 @@ export function LoadCharts({
   if (loading) return <Loading text="加载负载图表…" className="min-h-[20vh]" />;
   if (error) {
     return (
-      <div className="glass-panel rounded-2xl p-6 text-center text-sm text-destructive">
+      <div className="glass-panel rounded-lg p-6 text-center text-sm text-destructive">
         {error}
       </div>
     );
   }
   if (data.length === 0) {
     return (
-      <div className="glass-panel rounded-2xl p-6 text-center text-sm text-muted-foreground">
+      <div className="glass-panel rounded-lg p-6 text-center text-sm text-muted-foreground">
         暂无负载数据
       </div>
     );
@@ -160,7 +160,7 @@ export function LoadCharts({
   const last = data[data.length - 1];
   const colors = {
     cpu: "#f43f5e",
-    ram: "#8b5cf6",
+    ram: "#0ea5a5",
     disk: "#f59e0b",
     net: "#10b981",
     load: "#3b82f6",
@@ -191,9 +191,9 @@ export function LoadCharts({
                 "CPU",
               ]) as never}
               contentStyle={{
-                borderRadius: 12,
+                borderRadius: 8,
                 border: "1px solid var(--border)",
-                background: "var(--card)",
+                background: "var(--card-solid)",
                 fontSize: 12,
               }}
             />
@@ -239,9 +239,9 @@ export function LoadCharts({
                 "内存",
               ]) as never}
               contentStyle={{
-                borderRadius: 12,
+                borderRadius: 8,
                 border: "1px solid var(--border)",
-                background: "var(--card)",
+                background: "var(--card-solid)",
                 fontSize: 12,
               }}
             />
@@ -287,9 +287,9 @@ export function LoadCharts({
                 "硬盘",
               ]) as never}
               contentStyle={{
-                borderRadius: 12,
+                borderRadius: 8,
                 border: "1px solid var(--border)",
-                background: "var(--card)",
+                background: "var(--card-solid)",
                 fontSize: 12,
               }}
             />
@@ -335,9 +335,9 @@ export function LoadCharts({
                 name === "net_out" ? "上行" : "下行",
               ]) as never}
               contentStyle={{
-                borderRadius: 12,
+                borderRadius: 8,
                 border: "1px solid var(--border)",
-                background: "var(--card)",
+                background: "var(--card-solid)",
                 fontSize: 12,
               }}
             />

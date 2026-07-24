@@ -2,7 +2,7 @@
   "name": "Komari Glass",
   "short": "Glass",
   "description": "自用毛玻璃主题：顶部品牌栏 + 资产/流量/网速总览 + Glassmorphism 服务器卡片 + Purcarte 风格详情页",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "mengying",
   "url": "",
   "preview": "preview.png",
@@ -46,6 +46,20 @@
         "help": {
           "zh-CN": "system 跟随系统；light 浅色；dark 深色。用户本地选择会覆盖此默认值。",
           "en": "system follows OS; user local choice overrides this."
+        }
+      },
+      {
+        "key": "assetCurrency",
+        "name": {
+          "zh-CN": "资产折算币种",
+          "en": "Asset Currency"
+        },
+        "type": "select",
+        "options": "CNY,USD,EUR",
+        "default": "CNY",
+        "help": {
+          "zh-CN": "首页总览会将人民币、美元和欧元价格折算为该币种",
+          "en": "Convert CNY, USD and EUR prices to this currency"
         }
       },
       {

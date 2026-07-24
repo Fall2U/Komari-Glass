@@ -4,12 +4,14 @@
 
 技术栈：`bun` + `TypeScript` + `React` + `Next.js`（静态导出）。
 
+开发环境需要 Bun 1.3.x；生产构建建议同时提供 Node.js 20+，由 Bun 运行脚本、Next.js CLI 使用官方 Node 运行时。
+
 ## 界面结构
 
 1. **顶部栏**：左侧站点 Logo + 名称；右侧深/浅主题切换、后台入口
-2. **总览条**：**在线**（在线/总数）+ **资产**（总价值 / 剩余价值）；流量与网速可选
-3. **服务器卡片**（Glass 风格）：在线天数 + 价格；CPU/内存/硬盘/流量；网速 / 总流量 / 剩余天数+剩余价值；底部延迟与丢包柱
-4. **详情页**：点击卡片进入 `/instance/:uuid`（参考 Purcarte）
+2. **总览条**：在线、资产、累计流量、实时网速；资产支持 CNY / USD / EUR 折算
+3. **服务器卡片**（Glass 风格）：在线天数与价格、CPU/内存/硬盘/流量、速率/累计流量/到期信息、延迟与丢包、节点标签
+4. **详情页**：点击卡片进入 `/instance/:uuid`，展示费用摘要、实例信息、实时/历史负载与 Ping 图表
 
 ## 开发
 
@@ -17,17 +19,11 @@
 # 安装依赖
 bun install
 
-# 本地开发（需代理到 Komari 后端，见下方）
+# 本地开发
 bun run dev
 ```
 
-开发时如需对接真实后端，可在本机启动 Komari，并使用 Next rewrites，或在浏览器直接访问已部署站点的 API（同源）。
-
-更推荐：把构建产物上传到你的 Komari 实例验证。
-
-### 对接本地 Komari
-
-默认 API 走同源 `/api/*`。开发服务器可用环境变量配合反向代理；也可临时修改浏览器 Host，或用 Caddy/nginx 把主题 dev server 挂到 Komari 同域。
+主题与普通 Komari 主题一致，只访问当前 Komari 站点同源的 `/api/*`、`/images/*` 和 `/api/clients` WebSocket，不支持也不需要配置远程 API 地址。独立运行开发服务器时，由于本地没有 Komari 后端，接口会显示加载失败；完整联调请构建后上传到本机 Komari。
 
 ## 构建与安装
 
@@ -45,7 +41,7 @@ bun run build
 ### ZIP 结构
 
 ```
-komari-theme-glass-v1.0.0-xxx.zip
+komari-theme-glass-v1.1.0-xxx.zip
 ├── komari-theme.json
 ├── preview.png
 └── dist/
@@ -61,6 +57,7 @@ komari-theme-glass-v1.0.0-xxx.zip
 | --- | --- |
 | 站点 Logo URL | 顶部左侧 Logo |
 | 默认主题模式 | system / light / dark |
+| 资产折算币种 | CNY / USD / EUR |
 | 启用毛玻璃效果 | 开关 backdrop-filter |
 | 背景图片 URL | 支持 `浅色\|深色` |
 | 显示总览统计条 | 总开关 |

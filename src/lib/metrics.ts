@@ -1,5 +1,6 @@
 import { calcAssetTotals } from "./billing";
 import type {
+  AssetCurrency,
   DisplayNode,
   LiveStatus,
   LiveStatusMap,
@@ -91,7 +92,10 @@ export function sortNodes(
   });
 }
 
-export function calcOverview(nodes: DisplayNode[]) {
+export function calcOverview(
+  nodes: DisplayNode[],
+  assetCurrency: AssetCurrency = "CNY"
+) {
   let online = 0;
   let trafficUp = 0;
   let trafficDown = 0;
@@ -108,7 +112,7 @@ export function calcOverview(nodes: DisplayNode[]) {
     }
   }
 
-  const assets = calcAssetTotals(nodes);
+  const assets = calcAssetTotals(nodes, assetCurrency);
 
   return {
     online,

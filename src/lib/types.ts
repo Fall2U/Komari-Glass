@@ -9,6 +9,7 @@ export interface ApiResponse<T> {
 export interface ThemeSettings {
   siteLogo?: string;
   defaultAppearance?: "system" | "light" | "dark";
+  assetCurrency?: AssetCurrency;
   enableBlur?: boolean;
   backgroundImage?: string;
   showStatsBar?: boolean;
@@ -202,6 +203,7 @@ export interface PingHistoryResponse {
 }
 
 export type Appearance = "light" | "dark" | "system";
+export type AssetCurrency = "CNY" | "USD" | "EUR";
 export type Route =
   | { name: "home" }
   | { name: "instance"; uuid: string }

@@ -163,6 +163,7 @@ export function useNodePingStats(
   useEffect(() => {
     if (!enabled || !uuid) {
       setRecords([]);
+      setLoading(false);
       return;
     }
     let cancelled = false;

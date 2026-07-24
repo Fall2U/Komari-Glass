@@ -16,7 +16,7 @@ import { fetchPingHistory } from "@/lib/api";
 import type { PingHistoryResponse, PingRecord, PingTask } from "@/lib/types";
 
 const PALETTE = [
-  "#8b5cf6",
+  "#2563b9",
   "#10b981",
   "#f59e0b",
   "#3b82f6",
@@ -65,14 +65,14 @@ export function PingChart({
     if (!records.length) return { chartData: [], tasks };
 
     // group by timestamp
-    const byTime = new Map<number, Record<string, number | string>>();
+    const byTime = new Map<number, Record<string, number | string | null>>();
     for (const r of records) {
       const t = new Date(r.time).getTime();
       const row = byTime.get(t) || {
         time: t,
         label: new Date(r.time).toLocaleString(),
       };
-      row[`t_${r.task_id}`] = r.value;
+      row[`t_${r.task_id}`] = r.value >= 0 ? r.value : null;
       byTime.set(t, row);
     }
 
@@ -85,21 +85,21 @@ export function PingChart({
   if (loading) return <Loading text="加载延迟图表…" className="min-h-[20vh]" />;
   if (error) {
     return (
-      <div className="glass-panel rounded-2xl p-6 text-center text-sm text-destructive">
+      <div className="glass-panel rounded-lg p-6 text-center text-sm text-destructive">
         {error}
       </div>
     );
   }
   if (!chartData.length || !tasks.length) {
     return (
-      <div className="glass-panel rounded-2xl p-6 text-center text-sm text-muted-foreground">
+      <div className="glass-panel rounded-lg p-6 text-center text-sm text-muted-foreground">
         暂无延迟数据
       </div>
     );
   }
 
   return (
-    <div className="glass-panel rounded-2xl p-4">
+    <div className="glass-panel rounded-lg p-4">
       <h3 className="mb-3 text-sm font-semibold">延迟监测</h3>
       <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
@@ -133,9 +133,9 @@ export function PingChart({
                 return [`${Number(v).toFixed(1)} ms`, task?.name || name];
               }) as never}
               contentStyle={{
-                borderRadius: 12,
+                borderRadius: 8,
                 border: "1px solid var(--border)",
-                background: "var(--card)",
+                background: "var(--card-solid)",
                 fontSize: 12,
               }}
             />

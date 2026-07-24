@@ -150,6 +150,14 @@ export function getRegionCode(region: string | null | undefined): string {
   const entry = resolveEntry(region);
   if (entry) return entry.code;
   if (!region?.trim()) return "";
+  const emoji = extractEmoji(region);
+  if (emoji) {
+    const code = Array.from(emoji, (char) => {
+      const point = char.codePointAt(0);
+      return point ? String.fromCharCode(point - 0x1f1e6 + 65) : "";
+    }).join("");
+    if (/^[A-Z]{2}$/.test(code)) return code;
+  }
   // if already looks like a 2-letter code
   const t = region.trim();
   if (/^[a-z]{2}$/i.test(t)) return t.toUpperCase();

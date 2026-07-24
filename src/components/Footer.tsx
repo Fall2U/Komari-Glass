@@ -6,7 +6,7 @@ export function Footer() {
   const { publicInfo } = useApp();
 
   return (
-    <footer className="mx-auto w-full max-w-7xl px-4 py-8 text-center text-xs text-muted-foreground sm:px-6">
+    <footer className="mx-auto w-full max-w-[1440px] px-4 py-8 text-center text-xs text-muted-foreground sm:px-6 lg:px-8">
       {publicInfo?.description ? (
         <p className="mb-2 opacity-80">{publicInfo.description}</p>
       ) : null}

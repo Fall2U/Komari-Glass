@@ -5,6 +5,6 @@ out
 *.zip
 .DS_Store
 *.log
+*.tsbuildinfo
 .env*
-!.env.example
 .codex

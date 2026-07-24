@@ -1,10 +1,11 @@
-import type { Appearance, ThemeSettings } from "./types";
+import type { Appearance, AssetCurrency, ThemeSettings } from "./types";
 
 export const DEFAULT_THEME_SETTINGS: Required<
   Pick<
     ThemeSettings,
     | "siteLogo"
     | "defaultAppearance"
+    | "assetCurrency"
     | "enableBlur"
     | "backgroundImage"
     | "showStatsBar"
@@ -18,6 +19,7 @@ export const DEFAULT_THEME_SETTINGS: Required<
 > = {
   siteLogo: "",
   defaultAppearance: "system",
+  assetCurrency: "CNY",
   enableBlur: true,
   backgroundImage: "",
   showStatsBar: true,
@@ -45,6 +47,10 @@ export function mergeThemeSettings(
       src.defaultAppearance,
       DEFAULT_THEME_SETTINGS.defaultAppearance
     ),
+    assetCurrency: normalizeAssetCurrency(
+      src.assetCurrency,
+      DEFAULT_THEME_SETTINGS.assetCurrency
+    ),
     enableBlur: bool(src.enableBlur, DEFAULT_THEME_SETTINGS.enableBlur),
     backgroundImage: String(
       src.backgroundImage ?? DEFAULT_THEME_SETTINGS.backgroundImage
@@ -70,6 +76,15 @@ export function mergeThemeSettings(
       DEFAULT_THEME_SETTINGS.hideAdminWhenLoggedOut
     ),
   };
+}
+
+function normalizeAssetCurrency(
+  value: unknown,
+  fallback: AssetCurrency
+): AssetCurrency {
+  return value === "CNY" || value === "USD" || value === "EUR"
+    ? value
+    : fallback;
 }
 
 function bool(value: unknown, fallback: boolean): boolean {

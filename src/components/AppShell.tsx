@@ -13,7 +13,7 @@ export function AppShell() {
   return (
     <div className="relative flex min-h-dvh flex-col">
       <Header />
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-6 sm:px-6">
+      <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 pb-6 pt-4 sm:px-6 sm:pt-5 lg:px-8">
         {loading && route.name === "home" ? (
           <Loading />
         ) : route.name === "home" ? (
@@ -21,7 +21,7 @@ export function AppShell() {
         ) : route.name === "instance" ? (
           <InstancePage uuid={route.uuid} />
         ) : (
-          <div className="glass-panel mx-auto max-w-md rounded-2xl p-8 text-center">
+          <div className="glass-panel mx-auto max-w-md rounded-lg p-8 text-center">
             <p className="mb-2 text-lg font-semibold">页面不存在</p>
             <button type="button" className="btn-primary" onClick={goHome}>
               返回首页

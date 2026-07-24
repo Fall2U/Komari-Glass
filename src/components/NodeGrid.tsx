@@ -8,11 +8,11 @@ export function NodeGrid() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
-            className="glass-panel h-64 animate-pulse rounded-2xl bg-foreground/5"
+            className="glass-panel h-[328px] animate-pulse rounded-lg bg-foreground/5"
           />
         ))}
       </div>
@@ -21,7 +21,7 @@ export function NodeGrid() {
 
   if (error) {
     return (
-      <div className="glass-panel rounded-2xl p-8 text-center">
+      <div className="glass-panel rounded-lg p-8 text-center">
         <p className="mb-3 text-destructive">{error}</p>
         <button type="button" className="btn-primary" onClick={() => void refresh()}>
           重试
@@ -32,7 +32,7 @@ export function NodeGrid() {
 
   if (nodes.length === 0) {
     return (
-      <div className="glass-panel rounded-2xl p-8 text-center">
+      <div className="glass-panel rounded-lg p-8 text-center">
         <p className="mb-2 text-lg font-semibold">暂无节点</p>
         <p className="mb-4 text-sm text-muted-foreground">
           请在后台添加服务器节点
@@ -50,7 +50,7 @@ export function NodeGrid() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {nodes.map((node) => (
         <NodeCard
           key={node.uuid}

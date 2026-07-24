@@ -33,6 +33,35 @@ function getVersion(): string {
   return manifest.version || "0.0.0";
 }
 
+function validateThemeFiles(indexPath: string) {
+  const html = readFileSync(indexPath, "utf-8");
+  const requiredHtml = [
+    "<title>Komari Monitor</title>",
+    "A simple server monitor tool.",
+    "</head>",
+    "</body>",
+  ];
+  for (const marker of requiredHtml) {
+    if (!html.includes(marker)) {
+      throw new Error(`[package] dist/index.html is missing required marker: ${marker}`);
+    }
+  }
+
+  const manifest = JSON.parse(readFileSync(themeJsonPath, "utf-8")) as {
+    name?: string;
+    short?: string;
+  };
+  if (!manifest.name?.trim()) {
+    throw new Error("[package] komari-theme.json requires a name.");
+  }
+  if (
+    !manifest.short?.match(/^[A-Za-z0-9_-]+$/) ||
+    manifest.short.toLowerCase() === "default"
+  ) {
+    throw new Error("[package] komari-theme.json has an invalid short name.");
+  }
+}
+
 async function main() {
   if (!existsSync(distDir)) {
     console.error("[package] dist/ not found. Run `bun run build:only` first.");
@@ -49,6 +78,7 @@ async function main() {
     console.error("[package] dist/index.html not found.");
     process.exit(1);
   }
+  validateThemeFiles(indexPath);
 
   const version = getVersion();
   const hash = getCommitHash();

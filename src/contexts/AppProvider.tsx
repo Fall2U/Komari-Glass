@@ -178,7 +178,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return sortNodes(merged, settings.offlineLast);
   }, [rawNodes, liveMap, settings.offlineLast]);
 
-  const overview = useMemo(() => calcOverview(nodes), [nodes]);
+  const overview = useMemo(
+    () => calcOverview(nodes, settings.assetCurrency),
+    [nodes, settings.assetCurrency]
+  );
 
   const goHome = useCallback(() => {
     navigate({ name: "home" });
@@ -202,6 +205,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       document.title = publicInfo.sitename;
     }
   }, [publicInfo, route, nodes]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [route]);
 
   // ensure path canonical
   useEffect(() => {

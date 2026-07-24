@@ -55,7 +55,12 @@ const osConfigs: OSConfig[] = [
   {
     name: "OpenWrt",
     image: "/images/logo/os-openwrt.svg",
-    keywords: ["openwrt", "immortalwrt", "istore"],
+    keywords: ["openwrt", "immortalwrt"],
+  },
+  {
+    name: "iStoreOS",
+    image: "/images/logo/os-istore.png",
+    keywords: ["istore"],
   },
   {
     name: "Ubuntu",
@@ -74,19 +79,39 @@ const osConfigs: OSConfig[] = [
   },
   {
     name: "openSUSE",
-    image: "/images/logo/os-suse.svg",
+    image: "/images/logo/os-openSUSE.svg",
     keywords: ["suse", "opensuse"],
   },
   {
     name: "NixOS",
-    image: "/images/logo/os-nixos.svg",
+    image: "/images/logo/os-nix.svg",
     keywords: ["nix", "nixos"],
+  },
+  {
+    name: "fnOS",
+    image: "/images/logo/os-fnos.ico",
+    keywords: ["fnos", "trim connect"],
+  },
+  {
+    name: "Proxmox VE",
+    image: "/images/logo/os-proxmox.ico",
+    keywords: ["proxmox", "pve"],
+  },
+  {
+    name: "Synology DSM",
+    image: "/images/logo/os-synology.ico",
+    keywords: ["synology", "dsm"],
+  },
+  {
+    name: "macOS",
+    image: "/images/logo/os-macos.svg",
+    keywords: ["macos", "darwin"],
   },
 ];
 
 const DEFAULT_OS = {
   name: "Linux",
-  image: "/images/logo/os-linux.svg",
+  image: "/images/logo/linux.svg",
 };
 
 export function getOSInfo(os: string): { name: string; image: string } {

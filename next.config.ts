@@ -1,17 +1,23 @@
 import type { NextConfig } from "next";
 
-/**
- * Static export for Komari theme packages.
- * For local API proxy during `next dev`, run a reverse proxy (Caddy/nginx)
- * or point the browser at a same-origin Komari instance.
- */
+const isDevelopment = process.env.NODE_ENV === "development";
+
 const nextConfig: NextConfig = {
-  output: "export",
-  distDir: "dist",
+  ...(isDevelopment ? {} : { output: "export" as const }),
+  distDir: isDevelopment ? ".next" : "dist",
   images: {
     unoptimized: true,
   },
-  trailingSlash: true,
+  experimental: {
+    webpackBuildWorker: false,
+  },
+  // `bun run build` runs tsc first; skip Next's duplicate Bun child process.
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;

@@ -1,4 +1,6 @@
-/** Price / remaining-value helpers (aligned with Glass theme semantics) */
+import type { AssetCurrency } from "./types";
+
+/** Price / remaining-value helpers (aligned with Glass theme semantics). */
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const LONG_TERM_DAYS = 36500;
@@ -95,9 +97,25 @@ export function isPaidPrice(price: number): boolean {
   return Number.isFinite(price) && price > 0;
 }
 
+export function getCurrencySymbol(currency = "¥"): string {
+  const value = String(currency || "¥").trim();
+  switch (value.toUpperCase()) {
+    case "CNY":
+    case "RMB":
+      return "¥";
+    case "USD":
+      return "$";
+    case "EUR":
+      return "€";
+    default:
+      return value || "¥";
+  }
+}
+
 export function formatPrice(price: number, currency = "¥"): string {
-  if (price === 0 || price === -1) return "免费";
-  return `${currency || "¥"}${price}`;
+  if (price === -1) return "免费";
+  if (price === 0) return "未设置";
+  return `${getCurrencySymbol(currency)}${price}`;
 }
 
 export function formatPriceWithCycle(
@@ -132,7 +150,7 @@ export function getRemainingValue(
 export function formatCurrencyValue(value: number, currency = "¥"): string {
   const rounded = Math.round(value * 100) / 100;
   const text = rounded.toFixed(2).replace(/\.?0+$/, "");
-  return `${currency || "¥"}${text || "0"}`;
+  return `${getCurrencySymbol(currency)}${text || "0"}`;
 }
 
 export function formatExpireRemaining(
@@ -152,60 +170,82 @@ export interface AssetTotals {
   paidCount: number;
 }
 
-/** Sum paid nodes in their native currency (dominant currency if mixed). */
+const RATES_PER_CNY: Record<AssetCurrency, number> = {
+  CNY: 1,
+  USD: 0.142536,
+  EUR: 0.12102,
+};
+
+const ASSET_SYMBOLS: Record<AssetCurrency, string> = {
+  CNY: "¥",
+  USD: "$",
+  EUR: "€",
+};
+
+function normalizeSourceCurrency(currency: string): AssetCurrency | "OTHER" {
+  const value = String(currency || "CNY").trim().toUpperCase();
+  if (value === "CNY" || value === "¥" || value === "￥") return "CNY";
+  if (value === "USD" || value === "$") return "USD";
+  if (value === "EUR" || value === "€") return "EUR";
+  return "OTHER";
+}
+
+function convertAssetValue(
+  value: number,
+  from: string,
+  to: AssetCurrency
+): number {
+  const source = normalizeSourceCurrency(from);
+  if (source === "OTHER") return 0;
+  const valueInCny = value / RATES_PER_CNY[source];
+  return valueInCny * RATES_PER_CNY[to];
+}
+
+/** Convert paid nodes to one display currency before calculating totals. */
 export function calcAssetTotals(
   nodes: Array<{
     price: number;
     billing_cycle: number;
     currency: string;
     expired_at: string | null;
-  }>
+  }>,
+  targetCurrency: AssetCurrency = "CNY"
 ): AssetTotals {
-  const byCurrency = new Map<string, { total: number; remaining: number; count: number }>();
+  let totalValue = 0;
+  let remainingValue = 0;
+  let paidCount = 0;
 
   for (const node of nodes) {
     if (!isPaidPrice(node.price)) continue;
-    const currency = (node.currency || "¥").trim() || "¥";
-    const entry = byCurrency.get(currency) || { total: 0, remaining: 0, count: 0 };
-    entry.total += node.price;
-    entry.remaining += getRemainingValue(
+    const convertedPrice = convertAssetValue(
       node.price,
-      node.billing_cycle,
-      node.expired_at
+      node.currency,
+      targetCurrency
     );
-    entry.count += 1;
-    byCurrency.set(currency, entry);
-  }
-
-  if (byCurrency.size === 0) {
-    return { totalValue: 0, remainingValue: 0, currency: "¥", paidCount: 0 };
-  }
-
-  // Prefer the currency with the most paid nodes
-  let bestCurrency = "¥";
-  let best = { total: 0, remaining: 0, count: 0 };
-  for (const [currency, entry] of byCurrency) {
-    if (entry.count > best.count) {
-      bestCurrency = currency;
-      best = entry;
-    }
-  }
-
-  // If only one currency overall, use it even if count ties
-  if (byCurrency.size === 1) {
-    const [currency, entry] = [...byCurrency.entries()][0];
-    return {
-      totalValue: entry.total,
-      remainingValue: entry.remaining,
-      currency,
-      paidCount: entry.count,
-    };
+    if (convertedPrice <= 0) continue;
+    totalValue += convertedPrice;
+    remainingValue += convertAssetValue(
+      getRemainingValue(node.price, node.billing_cycle, node.expired_at),
+      node.currency,
+      targetCurrency
+    );
+    paidCount += 1;
   }
 
   return {
-    totalValue: best.total,
-    remainingValue: best.remaining,
-    currency: bestCurrency,
-    paidCount: best.count,
+    totalValue,
+    remainingValue,
+    currency: ASSET_SYMBOLS[targetCurrency],
+    paidCount,
   };
+}
+
+export function getMonthlyCost(
+  price: number,
+  billingCycle: number
+): number | null {
+  if (!isPaidPrice(price) || !Number.isFinite(billingCycle) || billingCycle <= 0) {
+    return null;
+  }
+  return (price / billingCycle) * 30;
 }

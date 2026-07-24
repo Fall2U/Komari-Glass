@@ -7,7 +7,6 @@ export interface ApiResponse<T> {
 }
 
 export interface ThemeSettings {
-  siteLogo?: string;
   defaultAppearance?: "system" | "light" | "dark";
   assetCurrency?: AssetCurrency;
   enableBlur?: boolean;
@@ -19,7 +18,6 @@ export interface ThemeSettings {
   showAssets?: boolean;
   showTraffic?: boolean;
   showSpeed?: boolean;
-  offlineLast?: boolean;
   hideAdminWhenLoggedOut?: boolean;
   [key: string]: unknown;
 }

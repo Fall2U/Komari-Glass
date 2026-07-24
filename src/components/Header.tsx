@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Moon, Server, Sun } from "lucide-react";
+import { Moon, Settings, Sun } from "lucide-react";
 import { useApp } from "@/contexts/AppProvider";
 
 export function Header() {
@@ -25,18 +25,13 @@ export function Header() {
           className="brand-link flex min-w-0 items-center gap-2.5 text-left"
           aria-label={`${sitename} 首页`}
         >
-          {settings.siteLogo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={settings.siteLogo}
-              alt=""
-              className="size-9 shrink-0 rounded-lg object-cover"
-            />
-          ) : (
-            <span className="brand-mark" aria-hidden="true">
-              <Server className="size-[18px]" strokeWidth={2.2} />
-            </span>
-          )}
+          {/* Komari serves the admin-configured favicon from this stable path. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/favicon.ico"
+            alt=""
+            className="size-9 shrink-0 rounded-lg object-contain"
+          />
           <span className="truncate text-[17px] font-semibold tracking-normal sm:text-lg">
             {sitename}
           </span>
@@ -64,7 +59,7 @@ export function Header() {
               aria-label="进入后台"
               title="进入后台"
             >
-              <LayoutDashboard className="size-[18px]" />
+              <Settings className="size-[18px]" />
             </a>
           ) : null}
         </div>

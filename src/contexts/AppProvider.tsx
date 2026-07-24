@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { fetchMe, fetchNodes, fetchPublicInfo } from "@/lib/api";
-import { calcOverview, mergeNodes, sortNodes } from "@/lib/metrics";
+import { calcOverview, mergeNodes } from "@/lib/metrics";
 import { navigate, parsePath, toPath } from "@/lib/router";
 import {
   APPEARANCE_KEY,
@@ -173,10 +173,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     root.dataset.blur = settings.enableBlur ? "on" : "off";
   }, [resolvedTheme, settings.backgroundImage, settings.enableBlur]);
 
-  const nodes = useMemo(() => {
-    const merged = mergeNodes(rawNodes, liveMap);
-    return sortNodes(merged, settings.offlineLast);
-  }, [rawNodes, liveMap, settings.offlineLast]);
+  // Preserve Komari's /api/nodes order exactly; live data only enriches each row.
+  const nodes = useMemo(
+    () => mergeNodes(rawNodes, liveMap),
+    [rawNodes, liveMap]
+  );
 
   const overview = useMemo(
     () => calcOverview(nodes, settings.assetCurrency),

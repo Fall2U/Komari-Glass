@@ -1,11 +1,11 @@
 "use client";
 
 import {
+  AlertTriangle,
   ArrowDown,
   ArrowUp,
   CalendarDays,
   ChevronDown,
-  ChevronRight,
   ChevronUp,
   Coins,
 } from "lucide-react";
@@ -59,8 +59,9 @@ export function NodeCard({
   const remainingValue = paid
     ? getRemainingValue(node.price, node.billing_cycle, node.expired_at)
     : 0;
-  const tags = parseNodeTags(node.tags).slice(0, 4);
+  const tags = parseNodeTags(node.tags);
   const ping = useNodePingStats(node.uuid, node.online, 1);
+  const offlineTime = formatOfflineTime(node.updated_at_live || node.updated_at);
 
   const priceText = paid
     ? formatPriceWithCycle(node.price, node.billing_cycle, node.currency || "¥")
@@ -93,12 +94,12 @@ export function NodeCard({
       onKeyDown={onKeyDown}
       aria-label={`查看 ${node.name} 详情`}
       className={cn(
-        "node-card glass-panel group flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-lg",
+        "node-card glass-panel relative flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
         !node.online && "node-card-offline"
       )}
     >
-      <header className="node-card-header flex h-12 shrink-0 items-center gap-2 border-b border-border/60 px-3.5">
+      <header className="node-card-header flex min-h-11 shrink-0 items-center gap-2 px-4 py-3">
         <span className="relative flex size-2.5 shrink-0" aria-hidden="true">
           <span
             className={cn(
@@ -110,10 +111,18 @@ export function NodeCard({
             <span className="absolute inset-0 animate-ping rounded-full bg-success opacity-45" />
           ) : null}
         </span>
-        <h2 className="min-w-0 flex-1 truncate text-sm font-semibold">
+        <h2 className="min-w-0 flex-1 truncate text-sm font-bold">
           {node.name}
         </h2>
         <div className="flex shrink-0 items-center gap-1.5">
+          {node.message?.trim() ? (
+            <AlertTriangle
+              className="size-3.5 text-warning"
+              aria-label="节点消息"
+            >
+              <title>{node.message.trim()}</title>
+            </AlertTriangle>
+          ) : null}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={getOSImage(node.os)}
@@ -126,11 +135,10 @@ export function NodeCard({
             }}
           />
           <Flag region={node.region} size={19} />
-          <ChevronRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
         </div>
       </header>
 
-      <div className="flex flex-1 flex-col gap-3 p-3.5">
+      <div className="node-card-content relative flex flex-1 flex-col gap-3 px-4 pb-4">
         <div className="flex h-5 items-center gap-1.5 overflow-hidden">
           <span
             className={cn(
@@ -180,32 +188,41 @@ export function NodeCard({
         </div>
 
         <div className="grid grid-cols-3 gap-1.5">
-          <MetricBox label="实时速率">
+          <DataPanel label="实时速率">
             <CompactLine icon={<ChevronUp />} className="text-success">
               {formatBytesPerSecond(node.net_out)}
             </CompactLine>
             <CompactLine icon={<ChevronDown />} className="text-info">
               {formatBytesPerSecond(node.net_in)}
             </CompactLine>
-          </MetricBox>
+          </DataPanel>
 
-          <MetricBox label="累计流量">
+          <DataPanel label="累计流量">
             <CompactLine icon={<ArrowUp />}>
               {formatBytes(node.net_total_up)}
             </CompactLine>
             <CompactLine icon={<ArrowDown />}>
               {formatBytes(node.net_total_down)}
             </CompactLine>
-          </MetricBox>
+          </DataPanel>
 
-          <MetricBox label="剩余周期">
-            <CompactLine icon={<CalendarDays />}>{remainingText}</CompactLine>
-            <CompactLine icon={<Coins />}>
-              {paid
-                ? formatCurrencyValue(remainingValue, node.currency || "¥")
-                : "--"}
-            </CompactLine>
-          </MetricBox>
+          <DataPanel label={paid ? "剩余周期" : "系统负载"}>
+            {paid ? (
+              <>
+                <CompactLine icon={<CalendarDays />}>{remainingText}</CompactLine>
+                <CompactLine icon={<Coins />}>
+                  {formatCurrencyValue(remainingValue, node.currency || "¥")}
+                </CompactLine>
+              </>
+            ) : (
+              <>
+                <CompactLine>{node.load.toFixed(2)}</CompactLine>
+                <CompactLine>
+                  {node.load5.toFixed(2)} / {node.load15.toFixed(2)}
+                </CompactLine>
+              </>
+            )}
+          </DataPanel>
         </div>
 
         <div className="grid grid-cols-2 gap-1.5">
@@ -224,16 +241,28 @@ export function NodeCard({
         </div>
 
         {tags.length > 0 ? (
-          <div className="flex h-5 items-center gap-1 overflow-hidden">
+          <div className="flex flex-wrap items-center gap-1">
             {tags.map((tag, index) => (
               <span
                 key={`${tag.text}-${index}`}
-                className={cn("node-tag min-w-0 truncate", getTagToneClass(tag.tone))}
+                className={cn(
+                  "node-tag max-w-full truncate",
+                  getTagToneClass(tag.tone)
+                )}
                 title={tag.text}
               >
                 {tag.text}
               </span>
             ))}
+          </div>
+        ) : null}
+
+        {!node.online ? (
+          <div className="node-offline-overlay absolute inset-0 z-20 flex flex-col items-center justify-center rounded-b-xl">
+            <span className="text-sm font-semibold text-destructive">离线</span>
+            <span className="mt-1 text-[11px] text-muted-foreground">
+              {offlineTime}
+            </span>
           </div>
         ) : null}
       </div>
@@ -274,7 +303,7 @@ function Metric({
   );
 }
 
-function MetricBox({
+function DataPanel({
   label,
   children,
 }: {
@@ -282,8 +311,12 @@ function MetricBox({
   children: React.ReactNode;
 }) {
   return (
-    <div className="metric-box" title={label}>
-      <span className="truncate text-[9px] text-muted-foreground/80">{label}</span>
+    <div
+      role="group"
+      className="node-data-panel"
+      title={label}
+      aria-label={label}
+    >
       {children}
     </div>
   );
@@ -294,15 +327,22 @@ function CompactLine({
   children,
   className,
 }: {
-  icon: React.ReactElement<{ className?: string }>;
+  icon?: React.ReactElement<{ className?: string }>;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <span className={cn("flex min-w-0 items-center gap-0.5 text-[10px] text-muted-foreground", className)}>
-      <span className="flex size-2.5 shrink-0 items-center justify-center [&>svg]:size-2.5">
-        {icon}
-      </span>
+    <span
+      className={cn(
+        "flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground",
+        className
+      )}
+    >
+      {icon ? (
+        <span className="flex size-2.5 shrink-0 items-center justify-center [&>svg]:size-2.5">
+          {icon}
+        </span>
+      ) : null}
       <span className="truncate tabular-nums">{children}</span>
     </span>
   );
@@ -320,7 +360,12 @@ function PingPanel({
   dimmed?: boolean;
 }) {
   return (
-    <div className={cn("metric-box h-11 gap-1.5 p-2", dimmed && "opacity-45")}>
+    <div
+      className={cn(
+        "node-data-panel h-11 gap-1.5 p-2",
+        dimmed && "opacity-45"
+      )}
+    >
       <div className="flex items-center justify-between gap-2 text-[10px] leading-none">
         <span className="text-muted-foreground">{label}</span>
         <span className="font-medium tabular-nums">{value}</span>
@@ -341,4 +386,18 @@ function PingPanel({
       </div>
     </div>
   );
+}
+
+function formatOfflineTime(value?: string): string {
+  if (!value) return "暂无更新时间";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "暂无更新时间";
+
+  return `最后更新 ${new Intl.DateTimeFormat("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date)}`;
 }

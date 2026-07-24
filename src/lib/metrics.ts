@@ -79,19 +79,6 @@ export function mergeNodes(
   return nodes.map((n) => mergeNode(n, liveMap?.[n.uuid]));
 }
 
-export function sortNodes(
-  nodes: DisplayNode[],
-  offlineLast: boolean
-): DisplayNode[] {
-  return [...nodes].sort((a, b) => {
-    if (offlineLast) {
-      if (a.online !== b.online) return a.online ? -1 : 1;
-    }
-    if (b.weight !== a.weight) return b.weight - a.weight;
-    return a.name.localeCompare(b.name, "zh-CN");
-  });
-}
-
 export function calcOverview(
   nodes: DisplayNode[],
   assetCurrency: AssetCurrency = "CNY"

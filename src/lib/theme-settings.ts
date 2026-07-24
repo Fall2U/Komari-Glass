@@ -3,7 +3,6 @@ import type { Appearance, AssetCurrency, ThemeSettings } from "./types";
 export const DEFAULT_THEME_SETTINGS: Required<
   Pick<
     ThemeSettings,
-    | "siteLogo"
     | "defaultAppearance"
     | "assetCurrency"
     | "enableBlur"
@@ -13,11 +12,9 @@ export const DEFAULT_THEME_SETTINGS: Required<
     | "showAssets"
     | "showTraffic"
     | "showSpeed"
-    | "offlineLast"
     | "hideAdminWhenLoggedOut"
   >
 > = {
-  siteLogo: "",
   defaultAppearance: "system",
   assetCurrency: "CNY",
   enableBlur: true,
@@ -28,7 +25,6 @@ export const DEFAULT_THEME_SETTINGS: Required<
   // 默认四项：在线 / 资产 / 累计流量 / 实时网速
   showTraffic: true,
   showSpeed: true,
-  offlineLast: true,
   hideAdminWhenLoggedOut: false,
 };
 
@@ -42,7 +38,6 @@ export function mergeThemeSettings(
   const hasLegacy = legacyAssets !== undefined && legacyAssets !== null;
 
   return {
-    siteLogo: String(src.siteLogo ?? DEFAULT_THEME_SETTINGS.siteLogo),
     defaultAppearance: normalizeAppearance(
       src.defaultAppearance,
       DEFAULT_THEME_SETTINGS.defaultAppearance
@@ -70,7 +65,6 @@ export function mergeThemeSettings(
     ),
     showTraffic: bool(src.showTraffic, DEFAULT_THEME_SETTINGS.showTraffic),
     showSpeed: bool(src.showSpeed, DEFAULT_THEME_SETTINGS.showSpeed),
-    offlineLast: bool(src.offlineLast, DEFAULT_THEME_SETTINGS.offlineLast),
     hideAdminWhenLoggedOut: bool(
       src.hideAdminWhenLoggedOut,
       DEFAULT_THEME_SETTINGS.hideAdminWhenLoggedOut

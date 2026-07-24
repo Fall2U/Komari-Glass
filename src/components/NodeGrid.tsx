@@ -12,7 +12,7 @@ export function NodeGrid() {
         {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
-            className="glass-panel h-[328px] animate-pulse rounded-lg bg-foreground/5"
+            className="glass-panel h-[328px] animate-pulse rounded-xl bg-foreground/5"
           />
         ))}
       </div>

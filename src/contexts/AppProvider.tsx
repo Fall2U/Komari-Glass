@@ -167,9 +167,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     root.dataset.blur = settings.enableBlur ? "on" : "off";
   }, [resolvedTheme, settings.backgroundImage, settings.enableBlur]);
 
-  // Preserve Komari's /api/nodes order exactly; live data only enriches each row.
+  // Komari's admin node list stores its drag-and-drop order in `weight`.
   const nodes = useMemo(
-    () => mergeNodes(rawNodes, liveMap),
+    () =>
+      mergeNodes(rawNodes, liveMap).sort(
+        (a, b) => (a.weight ?? 0) - (b.weight ?? 0)
+      ),
     [rawNodes, liveMap]
   );
 

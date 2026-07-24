@@ -2,17 +2,14 @@
   "name": "Komari Glass",
   "short": "Glass",
   "description": "自用毛玻璃主题：顶部品牌栏 + 资产/流量/网速总览 + Glassmorphism 服务器卡片 + Purcarte 风格详情页",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "author": "mengying",
   "url": "",
   "preview": "preview.png",
   "configuration": {
     "type": "managed",
-    "icon": "Sparkles",
-    "name": {
-      "zh-CN": "主题设置",
-      "en": "Theme Settings"
-    },
+    "icon": "/themes/Glass/dist/settings.svg",
+    "name": "主题设置",
     "data": [
       {
         "name": {

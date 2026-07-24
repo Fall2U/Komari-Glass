@@ -68,6 +68,11 @@ export function InstanceInfo({ node }: { node: DisplayNode }) {
             value={`${node.cpu_name || "--"} (x${node.cpu_cores || 0})`}
           />
           <InfoItem
+            label="架构"
+            icon={<Box />}
+            value={node.arch || "--"}
+          />
+          <InfoItem
             label="图形设备"
             icon={<Cpu />}
             value={
@@ -75,11 +80,6 @@ export function InstanceInfo({ node }: { node: DisplayNode }) {
                 ? "未检测到"
                 : node.gpu_name
             }
-          />
-          <InfoItem
-            label="架构"
-            icon={<Box />}
-            value={node.arch || "--"}
             className="border-t border-border"
           />
           <InfoItem

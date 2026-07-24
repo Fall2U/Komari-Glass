@@ -1,4 +1,4 @@
-/** OS icons are served by Komari core at /images/logo/ */
+/** OS icons are served by the Komari 1.3.0+ default theme at /assets/logo/. */
 
 interface OSConfig {
   name: string;
@@ -9,109 +9,109 @@ interface OSConfig {
 const osConfigs: OSConfig[] = [
   {
     name: "AlmaLinux",
-    image: "/images/logo/os-alma.svg",
+    image: "/assets/logo/os-alma.svg",
     keywords: ["alma", "almalinux"],
   },
   {
     name: "Alpine Linux",
-    image: "/images/logo/os-alpine.webp",
+    image: "/assets/logo/os-alpine.webp",
     keywords: ["alpine"],
   },
   {
     name: "Arch Linux",
-    image: "/images/logo/os-arch.svg",
+    image: "/assets/logo/os-arch.svg",
     keywords: ["arch", "archlinux"],
   },
   {
     name: "Armbian",
-    image: "/images/logo/os-armbian.svg",
+    image: "/assets/logo/os-armbian.svg",
     keywords: ["armbian"],
   },
   {
     name: "CentOS",
-    image: "/images/logo/os-centos.svg",
+    image: "/assets/logo/os-centos.svg",
     keywords: ["centos"],
   },
   {
     name: "Debian",
-    image: "/images/logo/os-debian.svg",
+    image: "/assets/logo/os-debian.svg",
     keywords: ["debian", "deb"],
   },
   {
     name: "Fedora",
-    image: "/images/logo/os-fedora.svg",
+    image: "/assets/logo/os-fedora.svg",
     keywords: ["fedora"],
   },
   {
     name: "FreeBSD",
-    image: "/images/logo/os-freebsd.svg",
+    image: "/assets/logo/os-freebsd.svg",
     keywords: ["freebsd", "bsd"],
   },
   {
     name: "Kali Linux",
-    image: "/images/logo/os-kail.svg",
+    image: "/assets/logo/os-kail.svg",
     keywords: ["kali", "kail"],
   },
   {
     name: "OpenWrt",
-    image: "/images/logo/os-openwrt.svg",
+    image: "/assets/logo/os-openwrt.svg",
     keywords: ["openwrt", "immortalwrt"],
   },
   {
     name: "iStoreOS",
-    image: "/images/logo/os-istore.png",
+    image: "/assets/logo/os-istore.png",
     keywords: ["istore"],
   },
   {
     name: "Ubuntu",
-    image: "/images/logo/os-ubuntu.svg",
+    image: "/assets/logo/os-ubuntu.svg",
     keywords: ["ubuntu", "elementary"],
   },
   {
     name: "Windows",
-    image: "/images/logo/os-windows.svg",
+    image: "/assets/logo/os-windows.svg",
     keywords: ["windows", "win", "microsoft"],
   },
   {
     name: "Rocky Linux",
-    image: "/images/logo/os-rocky.svg",
+    image: "/assets/logo/os-rocky.svg",
     keywords: ["rocky"],
   },
   {
     name: "openSUSE",
-    image: "/images/logo/os-openSUSE.svg",
+    image: "/assets/logo/os-openSUSE.svg",
     keywords: ["suse", "opensuse"],
   },
   {
     name: "NixOS",
-    image: "/images/logo/os-nix.svg",
+    image: "/assets/logo/os-nix.svg",
     keywords: ["nix", "nixos"],
   },
   {
     name: "fnOS",
-    image: "/images/logo/os-fnos.ico",
+    image: "/assets/logo/os-fnos.ico",
     keywords: ["fnos", "trim connect"],
   },
   {
     name: "Proxmox VE",
-    image: "/images/logo/os-proxmox.ico",
+    image: "/assets/logo/os-proxmox.ico",
     keywords: ["proxmox", "pve"],
   },
   {
     name: "Synology DSM",
-    image: "/images/logo/os-synology.ico",
+    image: "/assets/logo/os-synology.ico",
     keywords: ["synology", "dsm"],
   },
   {
     name: "macOS",
-    image: "/images/logo/os-macos.svg",
+    image: "/assets/logo/os-macos.svg",
     keywords: ["macos", "darwin"],
   },
 ];
 
 const DEFAULT_OS = {
   name: "Linux",
-  image: "/images/logo/linux.svg",
+  image: "/assets/logo/linux.svg",
 };
 
 function getOSInfo(os: string): { name: string; image: string } {

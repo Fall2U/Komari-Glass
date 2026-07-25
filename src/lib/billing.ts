@@ -1,17 +1,15 @@
 import type { AssetCurrency } from "./types";
+import {
+  FALLBACK_EXCHANGE_RATES,
+  type ExchangeRates,
+} from "./exchange-rates";
 
 /** Price / remaining-value helpers (aligned with Glass theme semantics). */
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const LONG_TERM_DAYS = 36500;
 
-type ExpireStatus =
-  | "unknown"
-  | "expired"
-  | "critical"
-  | "warning"
-  | "normal"
-  | "long_term";
+type ExpireStatus = "unknown" | "expired" | "normal" | "long_term";
 
 type BillingCycleType =
   | "once"
@@ -50,8 +48,62 @@ const CYCLE_TEXT: Record<BillingCycleType, string> = {
   custom: "周期",
 };
 
-function getExpiryDiffMs(expiredAt: string | number | null | undefined): number | null {
-  if (expiredAt === null || expiredAt === undefined || expiredAt === "") return null;
+const ASSET_SYMBOLS: Record<AssetCurrency, string> = {
+  CNY: "¥",
+  USD: "$",
+  HKD: "HK$",
+  EUR: "€",
+  GBP: "£",
+  JPY: "¥",
+  RUB: "₽",
+  CHF: "₣",
+  INR: "₹",
+  VND: "₫",
+  THB: "฿",
+  CAD: "CA$",
+};
+
+const CURRENCY_ALIASES: Record<string, AssetCurrency> = {
+  CNY: "CNY",
+  RMB: "CNY",
+  "¥": "CNY",
+  "￥": "CNY",
+  USD: "USD",
+  "$": "USD",
+  HKD: "HKD",
+  "HK$": "HKD",
+  EUR: "EUR",
+  "€": "EUR",
+  GBP: "GBP",
+  "£": "GBP",
+  JPY: "JPY",
+  RUB: "RUB",
+  "₽": "RUB",
+  CHF: "CHF",
+  "₣": "CHF",
+  INR: "INR",
+  "₹": "INR",
+  VND: "VND",
+  "₫": "VND",
+  THB: "THB",
+  "฿": "THB",
+  CAD: "CAD",
+  "CA$": "CAD",
+  "C$": "CAD",
+  "CAD$": "CAD",
+};
+
+function normalizeSourceCurrency(currency: string): AssetCurrency | "OTHER" {
+  const value = String(currency || "CNY").trim().toUpperCase();
+  return CURRENCY_ALIASES[value] ?? "OTHER";
+}
+
+function getExpiryDiffMs(
+  expiredAt: string | number | null | undefined
+): number | null {
+  if (expiredAt === null || expiredAt === undefined || expiredAt === "") {
+    return null;
+  }
   const t =
     typeof expiredAt === "number" ? expiredAt : new Date(expiredAt).getTime();
   if (!Number.isFinite(t)) return null;
@@ -74,8 +126,6 @@ export function getExpireStatus(
   if (diffMs === null) return "unknown";
   if (diffMs <= 0) return "expired";
   const days = Math.ceil(diffMs / MS_PER_DAY);
-  if (days <= 7) return "critical";
-  if (days <= 15) return "warning";
   if (days > LONG_TERM_DAYS) return "long_term";
   return "normal";
 }
@@ -99,17 +149,8 @@ export function isPaidPrice(price: number): boolean {
 
 function getCurrencySymbol(currency = "¥"): string {
   const value = String(currency || "¥").trim();
-  switch (value.toUpperCase()) {
-    case "CNY":
-    case "RMB":
-      return "¥";
-    case "USD":
-      return "$";
-    case "EUR":
-      return "€";
-    default:
-      return value || "¥";
-  }
+  const normalized = normalizeSourceCurrency(value);
+  return normalized === "OTHER" ? value || "¥" : ASSET_SYMBOLS[normalized];
 }
 
 function formatPrice(price: number, currency = "¥"): string {
@@ -160,35 +201,16 @@ interface AssetTotals {
   paidCount: number;
 }
 
-const RATES_PER_CNY: Record<AssetCurrency, number> = {
-  CNY: 1,
-  USD: 0.142536,
-  EUR: 0.12102,
-};
-
-const ASSET_SYMBOLS: Record<AssetCurrency, string> = {
-  CNY: "¥",
-  USD: "$",
-  EUR: "€",
-};
-
-function normalizeSourceCurrency(currency: string): AssetCurrency | "OTHER" {
-  const value = String(currency || "CNY").trim().toUpperCase();
-  if (value === "CNY" || value === "¥" || value === "￥") return "CNY";
-  if (value === "USD" || value === "$") return "USD";
-  if (value === "EUR" || value === "€") return "EUR";
-  return "OTHER";
-}
-
 function convertAssetValue(
   value: number,
   from: string,
-  to: AssetCurrency
+  to: AssetCurrency,
+  rates: ExchangeRates
 ): number {
   const source = normalizeSourceCurrency(from);
   if (source === "OTHER") return 0;
-  const valueInCny = value / RATES_PER_CNY[source];
-  return valueInCny * RATES_PER_CNY[to];
+  const valueInCny = value / rates[source];
+  return valueInCny * rates[to];
 }
 
 /** Convert paid nodes to one display currency before calculating totals. */
@@ -199,7 +221,8 @@ export function calcAssetTotals(
     currency: string;
     expired_at: string | null;
   }>,
-  targetCurrency: AssetCurrency = "CNY"
+  targetCurrency: AssetCurrency = "CNY",
+  rates: ExchangeRates = FALLBACK_EXCHANGE_RATES
 ): AssetTotals {
   let totalValue = 0;
   let remainingValue = 0;
@@ -210,14 +233,16 @@ export function calcAssetTotals(
     const convertedPrice = convertAssetValue(
       node.price,
       node.currency,
-      targetCurrency
+      targetCurrency,
+      rates
     );
     if (convertedPrice <= 0) continue;
     totalValue += convertedPrice;
     remainingValue += convertAssetValue(
       getRemainingValue(node.price, node.billing_cycle, node.expired_at),
       node.currency,
-      targetCurrency
+      targetCurrency,
+      rates
     );
     paidCount += 1;
   }

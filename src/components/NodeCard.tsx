@@ -109,7 +109,7 @@ export function NodeCard({
         !node.online && "node-card-offline"
       )}
     >
-      <header className="node-card-header flex min-h-11 shrink-0 items-center gap-2 px-4 py-3">
+      <header className="flex min-h-11 shrink-0 items-center gap-2 px-4 py-3">
         <span className="relative flex size-2.5 shrink-0" aria-hidden="true">
           <span
             className={cn(
@@ -150,7 +150,7 @@ export function NodeCard({
         </div>
       </header>
 
-      <div className="node-card-content relative flex flex-1 flex-col justify-between gap-3.5 px-4 pb-4">
+      <div className="relative flex flex-1 flex-col justify-between gap-3.5 px-4 pb-4">
         <div className="-mt-1 flex h-[19px] items-center gap-1.5 overflow-hidden">
           <span className="chip-pill shrink-0">
             在线 {getUptimeDays(node.uptime)} 天
@@ -220,22 +220,17 @@ export function NodeCard({
             </CompactLine>
           </DataPanel>
 
-          <DataPanel label={paid ? "剩余周期" : "系统负载"}>
+          <DataPanel label="剩余周期">
             {paid ? (
               <>
-                <CompactLine icon={<CalendarDays />}>{remainingText}</CompactLine>
+                <CompactLine icon={<CalendarDays />}>
+                  {remainingText}
+                </CompactLine>
                 <CompactLine icon={<Coins />}>
                   {formatCurrencyValue(remainingValue, node.currency || "¥")}
                 </CompactLine>
               </>
-            ) : (
-              <>
-                <CompactLine>{node.load.toFixed(2)}</CompactLine>
-                <CompactLine>
-                  {node.load5.toFixed(2)} / {node.load15.toFixed(2)}
-                </CompactLine>
-              </>
-            )}
+            ) : null}
           </DataPanel>
         </div>
 

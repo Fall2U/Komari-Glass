@@ -15,6 +15,13 @@ import {
   fetchNodes,
   fetchPublicInfo,
 } from "@/lib/api";
+import {
+  exchangeRatesEqual,
+  FALLBACK_EXCHANGE_RATES,
+  getCachedExchangeRates,
+  refreshExchangeRatesIfNeeded,
+  type ExchangeRates,
+} from "@/lib/exchange-rates";
 import { calcOverview, mergeNodes } from "@/lib/metrics";
 import { navigate, parsePath, toPath } from "@/lib/router";
 import {
@@ -118,6 +125,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [route, setRoute] = useState<Route>({ name: "home" });
   const [appearance, setAppearanceState] = useState<Appearance>("system");
   const [systemDark, setSystemDark] = useState(false);
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRates>(
+    FALLBACK_EXCHANGE_RATES
+  );
   const themeSwitchFrame = useRef<number | null>(null);
 
   const settings = useMemo(
@@ -200,6 +210,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }, [refresh]);
 
+  // Cache one exchange-rate request per local calendar day and refresh
+  // long-lived tabs when they become active.
+  useEffect(() => {
+    let active = true;
+
+    const applyRates = (next: ExchangeRates | null) => {
+      if (!active || !next) return;
+      setExchangeRates((current) =>
+        exchangeRatesEqual(current, next) ? current : next
+      );
+    };
+    const syncRates = () => {
+      void refreshExchangeRatesIfNeeded().then(applyRates);
+    };
+
+    applyRates(getCachedExchangeRates());
+    syncRates();
+
+    const interval = window.setInterval(syncRates, 60 * 60 * 1000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") syncRates();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, []);
+
   // live websocket
   useEffect(() => {
     if (loading) return;
@@ -241,8 +282,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const overview = useMemo(
-    () => calcOverview(nodes, settings.assetCurrency),
-    [nodes, settings.assetCurrency]
+    () => calcOverview(nodes, settings.assetCurrency, exchangeRates),
+    [nodes, settings.assetCurrency, exchangeRates]
   );
 
   const goHome = useCallback(() => {

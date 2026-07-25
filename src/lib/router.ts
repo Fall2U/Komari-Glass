@@ -3,7 +3,7 @@ import type { Route } from "./types";
 export function parsePath(pathname: string): Route {
   const path = pathname.replace(/\/+$/, "") || "/";
 
-  if (path === "/" || path === "") {
+  if (path === "/") {
     return { name: "home" };
   }
 
@@ -26,12 +26,8 @@ export function toPath(route: Route): string {
   }
 }
 
-export function navigate(route: Route, replace = false) {
+export function navigate(route: Route) {
   const path = toPath(route);
-  if (replace) {
-    window.history.replaceState({ route }, "", path);
-  } else {
-    window.history.pushState({ route }, "", path);
-  }
+  window.history.pushState({ route }, "", path);
   window.dispatchEvent(new PopStateEvent("popstate"));
 }

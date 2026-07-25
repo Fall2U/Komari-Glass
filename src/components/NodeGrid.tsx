@@ -4,21 +4,7 @@ import { NodeCard } from "@/components/NodeCard";
 import { useApp } from "@/contexts/AppProvider";
 
 export function NodeGrid() {
-  const { nodes, metricRetention, goInstance, loading, error, refresh } =
-    useApp();
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div
-            key={i}
-            className="glass-panel h-[336px] animate-pulse rounded-xl bg-foreground/5"
-          />
-        ))}
-      </div>
-    );
-  }
+  const { nodes, metricRetention, goInstance, error, refresh } = useApp();
 
   if (error) {
     return (
@@ -42,7 +28,7 @@ export function NodeGrid() {
           href="/admin"
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary inline-flex"
+          className="btn-primary"
         >
           进入后台
         </a>

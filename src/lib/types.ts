@@ -178,7 +178,21 @@ export interface PingHistoryResponse {
 }
 
 export type Appearance = "light" | "dark" | "system";
-export type AssetCurrency = "CNY" | "USD" | "EUR";
+export const ASSET_CURRENCIES = [
+  "CNY",
+  "USD",
+  "HKD",
+  "EUR",
+  "GBP",
+  "JPY",
+  "RUB",
+  "CHF",
+  "INR",
+  "VND",
+  "THB",
+  "CAD",
+] as const;
+export type AssetCurrency = (typeof ASSET_CURRENCIES)[number];
 export type Route =
   | { name: "home" }
   | { name: "instance"; uuid: string }

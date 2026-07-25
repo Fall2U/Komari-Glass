@@ -1,4 +1,9 @@
-import type { Appearance, AssetCurrency, ThemeSettings } from "./types";
+import {
+  ASSET_CURRENCIES,
+  type Appearance,
+  type AssetCurrency,
+  type ThemeSettings,
+} from "./types";
 
 const DEFAULT_THEME_SETTINGS: Required<
   Pick<
@@ -56,8 +61,9 @@ function normalizeAssetCurrency(
   value: unknown,
   fallback: AssetCurrency
 ): AssetCurrency {
-  return value === "CNY" || value === "USD" || value === "EUR"
-    ? value
+  if (typeof value !== "string") return fallback;
+  return (ASSET_CURRENCIES as readonly string[]).includes(value)
+    ? (value as AssetCurrency)
     : fallback;
 }
 

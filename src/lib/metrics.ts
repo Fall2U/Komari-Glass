@@ -1,4 +1,5 @@
 import { calcAssetTotals } from "./billing";
+import type { ExchangeRates } from "./exchange-rates";
 import type {
   AssetCurrency,
   DisplayNode,
@@ -78,7 +79,8 @@ export function mergeNodes(
 
 export function calcOverview(
   nodes: DisplayNode[],
-  assetCurrency: AssetCurrency = "CNY"
+  assetCurrency: AssetCurrency = "CNY",
+  exchangeRates?: ExchangeRates
 ) {
   let online = 0;
   let trafficUp = 0;
@@ -96,7 +98,7 @@ export function calcOverview(
     }
   }
 
-  const assets = calcAssetTotals(nodes, assetCurrency);
+  const assets = calcAssetTotals(nodes, assetCurrency, exchangeRates);
 
   return {
     online,

@@ -23,7 +23,7 @@ function InfoItem({
   className?: string;
 }) {
   return (
-    <div className={cn("detail-info-item flex min-w-0 items-start gap-2 py-2.5", className)}>
+    <div className={cn("flex min-w-0 items-start gap-2 py-2.5", className)}>
       {icon ? (
         <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md bg-foreground/5 text-muted-foreground [&>svg]:size-3.5">
           {icon}
@@ -61,7 +61,7 @@ export function InstanceInfo({ node }: { node: DisplayNode }) {
   return (
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
       <InfoGroup title="硬件信息" icon={<Cpu />}>
-        <div className="grid grid-cols-2 gap-x-4">
+        <div className="detail-info-grid grid gap-x-4">
           <InfoItem
             label="处理器"
             icon={<Cpu />}
@@ -92,7 +92,7 @@ export function InstanceInfo({ node }: { node: DisplayNode }) {
       </InfoGroup>
 
       <InfoGroup title="系统信息" icon={<ServerCog />}>
-        <div className="grid grid-cols-2 gap-x-4">
+        <div className="detail-info-grid grid gap-x-4">
           <InfoItem
             label="操作系统"
             icon={<ServerCog />}

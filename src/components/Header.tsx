@@ -1,11 +1,12 @@
 "use client";
 
-import { Moon, Settings, Sun } from "lucide-react";
+import { Moon, Sun, UserCircle } from "lucide-react";
 import { useApp } from "@/contexts/AppProvider";
 
 export function Header() {
   const {
     sitename,
+    loading,
     resolvedTheme,
     setAppearance,
     goHome,
@@ -14,7 +15,7 @@ export function Header() {
   const isDark = resolvedTheme === "dark";
 
   return (
-    <header className="site-header w-full">
+    <header className="w-full">
       <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
         <button
           type="button"
@@ -29,7 +30,11 @@ export function Header() {
             alt=""
             className="size-9 shrink-0 object-contain"
           />
-          <span className="truncate text-[17px] font-semibold tracking-normal sm:text-lg">
+          <span
+            className={`truncate text-[17px] font-semibold tracking-normal sm:text-lg ${
+              loading ? "invisible" : ""
+            }`}
+          >
             {sitename}
           </span>
         </button>
@@ -57,7 +62,7 @@ export function Header() {
             aria-label="进入后台"
             title="进入后台"
           >
-            <Settings className="size-[18px]" />
+            <UserCircle className="size-[18px]" />
           </a>
         </div>
       </div>

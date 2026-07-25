@@ -61,12 +61,11 @@ function StatItem({
 }
 
 export function StatsBar() {
-  const { overview, settings, loading } = useApp();
+  const { overview, settings } = useApp();
   if (!settings.showStatsBar) return null;
 
   const traffic = formatBytesSplit(overview.trafficTotal);
   const items: React.ReactNode[] = [];
-  const placeholder = "--";
 
   if (settings.showOnline) {
     items.push(
@@ -74,40 +73,31 @@ export function StatsBar() {
         key="online"
         icon={<Server className="size-4" />}
         label="在线节点"
-        value={loading ? placeholder : String(overview.online)}
-        unit={loading ? `/ ${placeholder}` : `/ ${overview.total} 台`}
+        value={String(overview.online)}
+        unit={`/ ${overview.total} 台`}
         valueClassName="text-success"
       >
         <span className="truncate">
-          {loading
-            ? "正在同步状态"
-            : overview.offline > 0
-              ? `${overview.offline} 台离线`
-              : "全部运行正常"}
+          {overview.offline > 0
+            ? `${overview.offline} 台离线`
+            : "全部运行正常"}
         </span>
       </StatItem>
     );
   }
 
   if (settings.showAssets) {
-    const total = loading
-      ? placeholder
-      : formatCurrencyValue(overview.totalValue, overview.currency);
     items.push(
       <StatItem
         key="assets"
         icon={<WalletCards className="size-4" />}
         label="在线资产"
-        value={total}
+        value={formatCurrencyValue(overview.totalValue, overview.currency)}
       >
         <span className="truncate">
-          {loading
-            ? "正在计算资产"
-            : `剩余 ${formatCurrencyValue(overview.remainingValue, overview.currency)}`}
+          剩余 {formatCurrencyValue(overview.remainingValue, overview.currency)}
         </span>
-        {!loading ? (
-          <span className="shrink-0">{overview.paidCount} 台计费</span>
-        ) : null}
+        <span className="shrink-0">{overview.paidCount} 台计费</span>
       </StatItem>
     );
   }
@@ -118,18 +108,16 @@ export function StatsBar() {
         key="traffic"
         icon={<Database className="size-4" />}
         label="累计流量"
-        value={loading ? placeholder : traffic.value}
-        unit={loading ? undefined : traffic.unit}
+        value={traffic.value}
+        unit={traffic.unit}
       >
         <span className="inline-flex shrink-0 items-center gap-1 text-success">
-          <ArrowUp className="size-3" />
-          {loading ? placeholder : formatBytes(overview.trafficUp)}
+          <span>上传</span>
+          {formatBytes(overview.trafficUp)}
         </span>
         <span className="inline-flex min-w-0 items-center gap-1 text-info">
-          <ArrowDown className="size-3 shrink-0" />
-          <span className="truncate">
-            {loading ? placeholder : formatBytes(overview.trafficDown)}
-          </span>
+          <span className="shrink-0">下载</span>
+          <span className="truncate">{formatBytes(overview.trafficDown)}</span>
         </span>
       </StatItem>
     );
@@ -141,20 +129,18 @@ export function StatsBar() {
         key="speed"
         icon={<Activity className="size-4" />}
         label="实时网速"
-        value={
-          loading ? placeholder : formatBytesPerSecond(overview.speedDown)
-        }
+        value={formatBytesPerSecond(overview.speedUp + overview.speedDown)}
       >
         <span className="inline-flex min-w-0 items-center gap-1 text-success">
           <ArrowUp className="size-3 shrink-0" />
           <span className="truncate">
-            {loading ? placeholder : formatBytesPerSecond(overview.speedUp)}
+            {formatBytesPerSecond(overview.speedUp)}
           </span>
         </span>
         <span className="inline-flex min-w-0 items-center gap-1 text-info">
           <ArrowDown className="size-3 shrink-0" />
           <span className="truncate">
-            {loading ? placeholder : formatBytesPerSecond(overview.speedDown)}
+            {formatBytesPerSecond(overview.speedDown)}
           </span>
         </span>
       </StatItem>

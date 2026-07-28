@@ -43,7 +43,7 @@ export function Header() {
           <button
             type="button"
             onClick={() => setAppearance(isDark ? "light" : "dark")}
-            className="icon-btn"
+            className="header-action-btn icon-btn"
             aria-label={isDark ? "切换到浅色主题" : "切换到深色主题"}
             title={isDark ? "浅色主题" : "深色主题"}
           >
@@ -58,7 +58,7 @@ export function Header() {
             href="/admin"
             target="_blank"
             rel="noopener noreferrer"
-            className="icon-btn"
+            className="header-action-btn icon-btn"
             aria-label="进入后台"
             title="进入后台"
           >

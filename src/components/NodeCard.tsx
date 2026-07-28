@@ -57,6 +57,7 @@ export function NodeCard({
   );
   const limited = hasTrafficLimit(node);
   const paid = isPaidPrice(node.price);
+  const free = node.price === -1;
   const expireStatus = getExpireStatus(node.expired_at);
   const remainingDays = getDaysUntilExpired(node.expired_at);
   const remainingValue = paid
@@ -75,19 +76,21 @@ export function NodeCard({
 
   const priceText = paid
     ? formatPriceWithCycle(node.price, node.billing_cycle, node.currency || "¥")
-    : node.price === -1
+    : free
       ? "免费"
       : "";
 
-  const remainingText = paid
-    ? expireStatus === "expired"
-      ? "已过期"
-      : expireStatus === "long_term"
-        ? "长期"
-        : expireStatus === "unknown"
-          ? "未设置"
-          : `${remainingDays} 天`
-    : "--";
+  const remainingText = free
+    ? "长期"
+    : paid
+      ? expireStatus === "expired"
+        ? "已过期"
+        : expireStatus === "long_term"
+          ? "长期"
+          : expireStatus === "unknown"
+            ? "未设置"
+            : `${remainingDays} 天`
+      : "";
 
   const onKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "Enter" || event.key === " ") {
@@ -221,13 +224,18 @@ export function NodeCard({
           </DataPanel>
 
           <DataPanel label="剩余周期">
-            {paid ? (
+            {paid || free ? (
               <>
                 <CompactLine icon={<CalendarDays />}>
                   {remainingText}
                 </CompactLine>
                 <CompactLine icon={<Coins />}>
-                  {formatCurrencyValue(remainingValue, node.currency || "¥")}
+                  {free
+                    ? "免费"
+                    : formatCurrencyValue(
+                        remainingValue,
+                        node.currency || "¥"
+                      )}
                 </CompactLine>
               </>
             ) : null}

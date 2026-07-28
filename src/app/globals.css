@@ -192,6 +192,10 @@ html[data-blur="off"] .glass-panel {
   background: color-mix(in srgb, var(--foreground) 7%, transparent);
 }
 
+.header-action-btn {
+  color: var(--foreground);
+}
+
 .icon-btn:focus-visible,
 .btn-primary:focus-visible {
   outline: 2px solid var(--ring);

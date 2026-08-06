@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { Loading } from "@/components/Loading";
 import { fetchPingHistory } from "@/lib/api";
+import { getChartGapLimit, insertTimelineGaps } from "@/lib/chart-gaps";
 import type { PingHistoryResponse, PingRecord, PingTask } from "@/lib/types";
 
 const PALETTE = [
@@ -25,6 +26,12 @@ const PALETTE = [
   "#ec4899",
   "#84cc16",
 ];
+
+interface PingSeriesPoint {
+  time: number;
+  label: string;
+  value: number | null;
+}
 
 export function PingChart({
   uuid,
@@ -59,28 +66,49 @@ export function PingChart({
     };
   }, [uuid, hours]);
 
-  const { chartData, tasks } = useMemo(() => {
+  const { chartData, tasks, seriesByTask } = useMemo(() => {
     const tasks: PingTask[] = data?.tasks || [];
     const records: PingRecord[] = data?.records || [];
-    if (!records.length) return { chartData: [], tasks };
-
-    // group by timestamp
-    const byTime = new Map<number, Record<string, number | string | null>>();
-    for (const r of records) {
-      const t = new Date(r.time).getTime();
-      const row = byTime.get(t) || {
-        time: t,
-        label: new Date(r.time).toLocaleString(),
+    if (!records.length) {
+      return {
+        chartData: [],
+        tasks,
+        seriesByTask: new Map<number, PingSeriesPoint[]>(),
       };
-      row[`t_${r.task_id}`] = r.value >= 0 ? r.value : null;
-      byTime.set(t, row);
     }
 
-    const chartData = Array.from(byTime.values()).sort(
-      (a, b) => (a.time as number) - (b.time as number)
-    );
-    return { chartData, tasks };
-  }, [data]);
+    const byTime = new Map<number, string>();
+    const pointsByTask = new Map<number, PingSeriesPoint[]>();
+    for (const r of records) {
+      const t = new Date(r.time).getTime();
+      if (!Number.isFinite(t)) continue;
+      byTime.set(t, new Date(r.time).toLocaleString());
+      const taskPoints = pointsByTask.get(r.task_id) || [];
+      taskPoints.push({
+        time: t,
+        label: new Date(r.time).toLocaleString(),
+        value: r.value >= 0 ? r.value : null,
+      });
+      pointsByTask.set(r.task_id, taskPoints);
+    }
+
+    const chartData = Array.from(byTime.entries())
+      .sort(([left], [right]) => left - right)
+      .map(([time, label]) => ({ time, label }));
+    const seriesByTask = new Map<number, PingSeriesPoint[]>();
+    for (const [taskId, points] of pointsByTask) {
+      points.sort((left, right) => left.time - right.time);
+      seriesByTask.set(
+        taskId,
+        insertTimelineGaps(
+          points,
+          (time) => ({ time, label: "", value: null }),
+          getChartGapLimit(hours)
+        )
+      );
+    }
+    return { chartData, tasks, seriesByTask };
+  }, [data, hours]);
 
   if (loading) return <Loading text="加载延迟图表…" className="min-h-[20vh]" />;
   if (error) {
@@ -128,10 +156,10 @@ export function PingChart({
               labelFormatter={((_l: any, payload: any) =>
                 (payload?.[0]?.payload as { label?: string } | undefined)
                   ?.label || "") as never}
-              formatter={((v: number, name: string) => {
-                const task = tasks.find((t) => `t_${t.id}` === name);
-                return [`${Number(v).toFixed(1)} ms`, task?.name || name];
-              }) as never}
+              formatter={((v: number, name: string) => [
+                `${Number(v).toFixed(1)} ms`,
+                name,
+              ]) as never}
               contentStyle={{
                 borderRadius: 8,
                 border: "1px solid var(--border)",
@@ -139,21 +167,18 @@ export function PingChart({
                 fontSize: 12,
               }}
             />
-            <Legend
-              formatter={(value) => {
-                const task = tasks.find((t) => `t_${t.id}` === value);
-                return task?.name || String(value);
-              }}
-            />
+            <Legend />
             {tasks.map((task, i) => (
               <Line
                 key={task.id}
                 type="monotone"
-                dataKey={`t_${task.id}`}
+                data={seriesByTask.get(task.id) || []}
+                dataKey="value"
+                name={task.name}
                 stroke={PALETTE[i % PALETTE.length]}
                 strokeWidth={2}
                 dot={false}
-                connectNulls
+                connectNulls={false}
                 isAnimationActive={false}
               />
             ))}

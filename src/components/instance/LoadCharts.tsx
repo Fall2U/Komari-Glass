@@ -11,11 +11,12 @@ import {
   YAxis,
 } from "recharts";
 import { fetchLoadHistory, fetchRecentStats } from "@/lib/api";
+import { getChartGapLimit, insertTimelineGaps } from "@/lib/chart-gaps";
 import { formatBytes, formatBytesPerSecond } from "@/lib/format";
 import type { DisplayNode, HistoryRecord } from "@/lib/types";
 import { Loading } from "@/components/Loading";
 
-interface ChartPoint {
+interface LoadPoint {
   time: number;
   label: string;
   cpu: number;
@@ -25,7 +26,19 @@ interface ChartPoint {
   net_out: number;
 }
 
-function toPoints(records: HistoryRecord[]): ChartPoint[] {
+interface LoadGapPoint {
+  time: number;
+  label: string;
+  cpu: null;
+  ram: null;
+  disk: null;
+  net_in: null;
+  net_out: null;
+}
+
+type ChartPoint = LoadPoint | LoadGapPoint;
+
+function toPoints(records: HistoryRecord[]): LoadPoint[] {
   return records
     .map((r) => {
       const t = new Date(r.time).getTime();
@@ -39,6 +52,7 @@ function toPoints(records: HistoryRecord[]): ChartPoint[] {
         net_out: r.net_out,
       };
     })
+    .filter((point) => Number.isFinite(point.time))
     .sort((a, b) => a.time - b.time);
 }
 
@@ -126,7 +140,24 @@ export function LoadCharts({
     };
   }, [node.uuid, hours]);
 
-  const data = useMemo(() => toPoints(records), [records]);
+  const samples = useMemo(() => toPoints(records), [records]);
+  const data = useMemo(
+    () =>
+      insertTimelineGaps(
+        samples,
+        (time): LoadGapPoint => ({
+          time,
+          label: "",
+          cpu: null,
+          ram: null,
+          disk: null,
+          net_in: null,
+          net_out: null,
+        }),
+        getChartGapLimit(hours)
+      ),
+    [hours, samples]
+  );
 
   if (loading) return <Loading text="加载负载图表…" className="min-h-[20vh]" />;
   if (error) {
@@ -136,7 +167,7 @@ export function LoadCharts({
       </div>
     );
   }
-  if (data.length === 0) {
+  if (samples.length === 0) {
     return (
       <div className="glass-panel rounded-lg p-6 text-center text-sm text-muted-foreground">
         暂无负载数据
@@ -144,7 +175,7 @@ export function LoadCharts({
     );
   }
 
-  const last = data[data.length - 1];
+  const last = samples[samples.length - 1];
   const memoryTotal = node.mem_total;
   const diskTotal = node.disk_total;
   const colors = {
@@ -193,6 +224,7 @@ export function LoadCharts({
               fill={colors.cpu}
               fillOpacity={0.15}
               strokeWidth={2}
+              connectNulls={false}
               isAnimationActive={false}
             />
           </AreaChart>
@@ -244,6 +276,7 @@ export function LoadCharts({
               fill={colors.ram}
               fillOpacity={0.15}
               strokeWidth={2}
+              connectNulls={false}
               isAnimationActive={false}
             />
           </AreaChart>
@@ -295,6 +328,7 @@ export function LoadCharts({
               fill={colors.disk}
               fillOpacity={0.15}
               strokeWidth={2}
+              connectNulls={false}
               isAnimationActive={false}
             />
           </AreaChart>
@@ -343,6 +377,7 @@ export function LoadCharts({
               fill={colors.netOut}
               fillOpacity={0.12}
               strokeWidth={2}
+              connectNulls={false}
               isAnimationActive={false}
             />
             <Area
@@ -352,6 +387,7 @@ export function LoadCharts({
               fill={colors.netIn}
               fillOpacity={0.1}
               strokeWidth={2}
+              connectNulls={false}
               isAnimationActive={false}
             />
           </AreaChart>

@@ -13,7 +13,12 @@ import {
 } from "recharts";
 import { Loading } from "@/components/Loading";
 import { fetchPingHistory } from "@/lib/api";
-import { getChartGapLimit, insertTimelineGaps } from "@/lib/chart-gaps";
+import {
+  formatChartTimeTick,
+  getChartGapLimit,
+  getChartTimeRange,
+  insertTimelineGaps,
+} from "@/lib/chart-gaps";
 import type { PingHistoryResponse, PingRecord, PingTask } from "@/lib/types";
 
 const PALETTE = [
@@ -109,6 +114,10 @@ export function PingChart({
     }
     return { chartData, tasks, seriesByTask };
   }, [data, hours]);
+  const timeRange = useMemo(
+    () => getChartTimeRange(hours),
+    [data, hours]
+  );
 
   if (loading) return <Loading text="加载延迟图表…" className="min-h-[20vh]" />;
   if (error) {
@@ -136,14 +145,14 @@ export function PingChart({
             <XAxis
               dataKey="time"
               type="number"
-              domain={["dataMin", "dataMax"]}
+              domain={timeRange.domain}
+              ticks={timeRange.ticks}
+              allowDataOverflow
+              interval="preserveStartEnd"
               tick={{ fontSize: 10 }}
               minTickGap={40}
               tickFormatter={(v) =>
-                new Date(v as number).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
+                formatChartTimeTick(v as number, hours)
               }
             />
             <YAxis

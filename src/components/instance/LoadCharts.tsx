@@ -11,7 +11,12 @@ import {
   YAxis,
 } from "recharts";
 import { fetchLoadHistory, fetchRecentStats } from "@/lib/api";
-import { getChartGapLimit, insertTimelineGaps } from "@/lib/chart-gaps";
+import {
+  formatChartTimeTick,
+  getChartGapLimit,
+  getChartTimeRange,
+  insertTimelineGaps,
+} from "@/lib/chart-gaps";
 import { formatBytes, formatBytesPerSecond } from "@/lib/format";
 import type { DisplayNode, HistoryRecord } from "@/lib/types";
 import { Loading } from "@/components/Loading";
@@ -54,17 +59,6 @@ function toPoints(records: HistoryRecord[]): LoadPoint[] {
     })
     .filter((point) => Number.isFinite(point.time))
     .sort((a, b) => a.time - b.time);
-}
-
-function tickLabel(ts: number, hours: number): string {
-  const d = new Date(ts);
-  if (hours <= 1) {
-    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  }
-  if (hours <= 24) {
-    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  }
-  return d.toLocaleDateString([], { month: "2-digit", day: "2-digit", hour: "2-digit" });
 }
 
 function resourceTicks(total: number): number[] {
@@ -141,6 +135,10 @@ export function LoadCharts({
   }, [node.uuid, hours]);
 
   const samples = useMemo(() => toPoints(records), [records]);
+  const timeRange = useMemo(
+    () => getChartTimeRange(hours),
+    [hours, records]
+  );
   const data = useMemo(
     () =>
       insertTimelineGaps(
@@ -195,8 +193,13 @@ export function LoadCharts({
             <XAxis
               dataKey="time"
               type="number"
-              domain={["dataMin", "dataMax"]}
-              tickFormatter={(v) => tickLabel(v as number, hours || 1)}
+              domain={timeRange.domain}
+              ticks={timeRange.ticks}
+              allowDataOverflow={hours > 0}
+              interval="preserveStartEnd"
+              tickFormatter={(v) =>
+                formatChartTimeTick(v as number, hours || 1)
+              }
               tick={{ fontSize: 10 }}
               minTickGap={30}
             />
@@ -241,8 +244,13 @@ export function LoadCharts({
             <XAxis
               dataKey="time"
               type="number"
-              domain={["dataMin", "dataMax"]}
-              tickFormatter={(v) => tickLabel(v as number, hours || 1)}
+              domain={timeRange.domain}
+              ticks={timeRange.ticks}
+              allowDataOverflow={hours > 0}
+              interval="preserveStartEnd"
+              tickFormatter={(v) =>
+                formatChartTimeTick(v as number, hours || 1)
+              }
               tick={{ fontSize: 10 }}
               minTickGap={30}
             />
@@ -293,8 +301,13 @@ export function LoadCharts({
             <XAxis
               dataKey="time"
               type="number"
-              domain={["dataMin", "dataMax"]}
-              tickFormatter={(v) => tickLabel(v as number, hours || 1)}
+              domain={timeRange.domain}
+              ticks={timeRange.ticks}
+              allowDataOverflow={hours > 0}
+              interval="preserveStartEnd"
+              tickFormatter={(v) =>
+                formatChartTimeTick(v as number, hours || 1)
+              }
               tick={{ fontSize: 10 }}
               minTickGap={30}
             />
@@ -345,8 +358,13 @@ export function LoadCharts({
             <XAxis
               dataKey="time"
               type="number"
-              domain={["dataMin", "dataMax"]}
-              tickFormatter={(v) => tickLabel(v as number, hours || 1)}
+              domain={timeRange.domain}
+              ticks={timeRange.ticks}
+              allowDataOverflow={hours > 0}
+              interval="preserveStartEnd"
+              tickFormatter={(v) =>
+                formatChartTimeTick(v as number, hours || 1)
+              }
               tick={{ fontSize: 10 }}
               minTickGap={30}
             />

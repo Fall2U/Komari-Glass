@@ -47,15 +47,20 @@ class LiveWebSocket {
     const url = `${protocol}//${window.location.host}/api/clients`;
 
     try {
-      this.ws = new WebSocket(url);
+      const socket = new WebSocket(url);
+      this.ws = socket;
 
-      this.ws.onopen = () => {
+      socket.onopen = () => {
+        if (this.ws !== socket || this.intentionalClose) {
+          socket.close();
+          return;
+        }
         this.reconnectAttempts = 0;
         this.requestUpdate();
         this.startStatusUpdates();
       };
 
-      this.ws.onmessage = (event) => {
+      socket.onmessage = (event) => {
         try {
           const payload = JSON.parse(event.data as string) as LivePayload;
 
@@ -72,12 +77,15 @@ class LiveWebSocket {
         }
       };
 
-      this.ws.onclose = () => {
+      socket.onclose = () => {
         this.stopStatusUpdates();
-        if (!this.intentionalClose) this.scheduleReconnect();
+        if (this.ws === socket) {
+          this.ws = null;
+          if (!this.intentionalClose) this.scheduleReconnect();
+        }
       };
 
-      this.ws.onerror = () => {
+      socket.onerror = () => {
         // onclose will fire after error
       };
     } catch (error) {
@@ -94,8 +102,16 @@ class LiveWebSocket {
       this.reconnectTimer = null;
     }
     if (this.ws) {
-      this.ws.close();
+      const socket = this.ws;
       this.ws = null;
+      if (socket.readyState === WebSocket.CONNECTING) {
+        socket.onopen = () => socket.close();
+        socket.onmessage = null;
+        socket.onclose = null;
+        socket.onerror = null;
+      } else if (socket.readyState < WebSocket.CLOSING) {
+        socket.close();
+      }
     }
   }
 
@@ -123,7 +139,10 @@ class LiveWebSocket {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) return;
     this.reconnectAttempts += 1;
     const delay = Math.min(1000 * 2 ** (this.reconnectAttempts - 1), 15000);
-    this.reconnectTimer = setTimeout(() => this.connect(), delay);
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      this.connect();
+    }, delay);
   }
 }
 

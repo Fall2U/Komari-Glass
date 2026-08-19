@@ -201,7 +201,7 @@ export function useNodePingStats(
   uuid: string,
   enabled = true,
   hours = 1,
-  selection: PingTaskSelection = { telecom: "", mobile: "", unicom: "" }
+  selection: PingTaskSelection | null = null
 ): NodePingStats {
   const [data, setData] = useState<PingData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -260,33 +260,42 @@ export function useNodePingStats(
       };
     }
 
-    const recordStats = summarizePingRecords(data.history.records);
+    const recordStats = summarizePingRecords(
+      data.history.records,
+      selection !== null
+    );
     const summaries = new Map(
       recordStats.tasks.map((summary) => [
         summary.taskId,
         summary,
       ])
     );
-    const taskMap = new Map<string, PingTask>();
-    for (const task of data.history.tasks) {
-      const name = task.name.trim();
-      if (name && !taskMap.has(name)) taskMap.set(name, task);
-    }
     const exactLoss = getExactPingLossByTask(uuid, data.metricStats);
-    const configured = PING_SLOTS.map((slot) => ({
-      ...slot,
-      taskName: selection[slot.key].trim(),
-    }));
+    const configured = selection
+      ? PING_SLOTS.map((slot) => ({
+          ...slot,
+          taskName: selection[slot.key].trim(),
+        }))
+      : [];
     const configuredMode = configured.some((slot) => slot.taskName !== "");
     const usedTaskIds = new Set<number>();
-    const automaticTasks = configuredMode
-      ? null
-      : selectAutomaticPingTasks(
+    const automaticTasks = selection && !configuredMode
+      ? selectAutomaticPingTasks(
           data.history.tasks,
           new Set(summaries.keys())
-        );
+        )
+      : null;
+    const taskMap = new Map<string, PingTask>();
+    if (configuredMode) {
+      for (const task of data.history.tasks) {
+        const name = task.name.trim();
+        if (name && !taskMap.has(name)) taskMap.set(name, task);
+      }
+    }
 
-    const selected = configuredMode
+    const selected = !selection
+      ? []
+      : configuredMode
       ? configured.flatMap((slot) => {
           if (!slot.taskName) return [];
           const task = taskMap.get(slot.taskName);
@@ -390,9 +399,9 @@ export function useNodePingStats(
   }, [
     data,
     loading,
-    selection.telecom,
-    selection.mobile,
-    selection.unicom,
+    selection?.telecom,
+    selection?.mobile,
+    selection?.unicom,
     uuid,
   ]);
 

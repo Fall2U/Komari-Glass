@@ -74,7 +74,8 @@ function buildTaskHistory(records: PingRecord[]): PingTaskHistoryPoint[] {
 }
 
 export function summarizePingRecordsByTask(
-  records: PingRecord[]
+  records: PingRecord[],
+  includeHistory = false
 ): PingRecordTaskSummary[] {
   const taskRecords = new Map<number, PingRecord[]>();
   for (const record of records) {
@@ -98,15 +99,16 @@ export function summarizePingRecordsByTask(
       latestLatency: latest.value,
       loss:
         ((taskValues.length - valid.length) / taskValues.length) * 100,
-      history: buildTaskHistory(taskValues),
+      history: includeHistory ? buildTaskHistory(taskValues) : [],
     }];
   });
 }
 
 export function summarizePingRecords(
-  records: PingRecord[]
+  records: PingRecord[],
+  includeTaskHistory = false
 ): PingRecordSummary {
-  const tasks = summarizePingRecordsByTask(records);
+  const tasks = summarizePingRecordsByTask(records, includeTaskHistory);
   const includedTaskIds = new Set(tasks.map((task) => task.taskId));
   const includedRecords = records.filter((record) =>
     includedTaskIds.has(record.task_id)

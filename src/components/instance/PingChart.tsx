@@ -13,6 +13,7 @@ import {
 import { Loading } from "@/components/Loading";
 import { fetchPingHistory, fetchPingMetricStats } from "@/lib/api";
 import {
+  formatChartTooltipLabel,
   formatChartTimeTick,
   getChartGapLimit,
   getChartTimeRange,
@@ -271,9 +272,7 @@ export function PingChart({
               tickFormatter={(v) => `${v}`}
             />
             <Tooltip
-              labelFormatter={((_l: any, payload: any) =>
-                (payload?.[0]?.payload as { label?: string } | undefined)
-                  ?.label || "") as never}
+              labelFormatter={formatChartTooltipLabel as never}
               formatter={((v: number, name: string) => [
                 `${Number(v).toFixed(1)} ms`,
                 name,

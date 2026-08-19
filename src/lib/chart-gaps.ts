@@ -91,3 +91,15 @@ export function formatChartTimeTick(timestamp: number, hours: number): string {
   }
   return date.toLocaleDateString([], { month: "2-digit", day: "2-digit" });
 }
+
+export function formatChartTooltipLabel(
+  _label: unknown,
+  payload: unknown
+): string {
+  if (!Array.isArray(payload)) return "";
+  const first: unknown = payload[0];
+  if (!first || typeof first !== "object" || !("payload" in first)) return "";
+  const point = first.payload;
+  if (!point || typeof point !== "object" || !("label" in point)) return "";
+  return typeof point.label === "string" ? point.label : "";
+}

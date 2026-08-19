@@ -76,7 +76,7 @@ export function NodeCard({
     node.uuid,
     pingEnabled,
     1,
-    pingTaskSelection
+    showCarrierPing ? pingTaskSelection : null
   );
   const offlineTime = formatOfflineTime(node.updated_at_live || node.updated_at);
   const trafficValueClassName = limited

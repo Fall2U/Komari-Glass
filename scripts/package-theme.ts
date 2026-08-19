@@ -17,8 +17,8 @@ import {
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
-// @ts-expect-error archiver has no bundled types in some versions
-import archiver from "archiver";
+// @ts-expect-error archiver 8 does not bundle TypeScript declarations.
+import { ZipArchive } from "archiver";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const distDir = resolve(root, "dist");
@@ -96,7 +96,7 @@ async function main() {
 
   await new Promise<void>((resolvePromise, reject) => {
     const output = createWriteStream(outputPath);
-    const archive = archiver("zip", { zlib: { level: 9 } });
+    const archive = new ZipArchive({ zlib: { level: 9 } });
 
     output.on("close", () => {
       const mb = (archive.pointer() / 1024 / 1024).toFixed(2);

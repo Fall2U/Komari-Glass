@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentProps,
+  type CSSProperties,
+} from "react";
 import {
   Area,
   AreaChart,
@@ -12,6 +18,7 @@ import {
 } from "recharts";
 import { fetchLoadHistory, fetchRecentStats } from "@/lib/api";
 import {
+  formatChartTooltipLabel,
   formatChartTimeTick,
   getChartGapLimit,
   getChartTimeRange,
@@ -41,7 +48,20 @@ interface LoadGapPoint {
   net_out: null;
 }
 
-type ChartPoint = LoadPoint | LoadGapPoint;
+const CHART_COLORS = {
+  cpu: "#f43f5e",
+  ram: "#0ea5a5",
+  disk: "#f59e0b",
+  netOut: "#10b981",
+  netIn: "#3b82f6",
+};
+
+const TOOLTIP_STYLE: CSSProperties = {
+  borderRadius: 8,
+  border: "1px solid var(--border)",
+  background: "var(--card-solid)",
+  fontSize: 12,
+};
 
 function toPoints(records: HistoryRecord[]): LoadPoint[] {
   return records
@@ -176,12 +196,17 @@ export function LoadCharts({
   const last = samples[samples.length - 1];
   const memoryTotal = node.mem_total;
   const diskTotal = node.disk_total;
-  const colors = {
-    cpu: "#f43f5e",
-    ram: "#0ea5a5",
-    disk: "#f59e0b",
-    netOut: "#10b981",
-    netIn: "#3b82f6",
+  const timeAxisProps: ComponentProps<typeof XAxis> = {
+    dataKey: "time",
+    type: "number",
+    domain: timeRange.domain,
+    ticks: timeRange.ticks,
+    allowDataOverflow: hours > 0,
+    interval: "preserveStartEnd",
+    tickFormatter: (value) =>
+      formatChartTimeTick(Number(value), hours || 1),
+    tick: { fontSize: 10 },
+    minTickGap: 30,
   };
 
   return (
@@ -190,41 +215,21 @@ export function LoadCharts({
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-            <XAxis
-              dataKey="time"
-              type="number"
-              domain={timeRange.domain}
-              ticks={timeRange.ticks}
-              allowDataOverflow={hours > 0}
-              interval="preserveStartEnd"
-              tickFormatter={(v) =>
-                formatChartTimeTick(v as number, hours || 1)
-              }
-              tick={{ fontSize: 10 }}
-              minTickGap={30}
-            />
+            <XAxis {...timeAxisProps} />
             <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} width={36} />
             <Tooltip
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              labelFormatter={((_l: any, payload: any) =>
-                (payload?.[0]?.payload as ChartPoint | undefined)?.label ||
-                "") as never}
+              labelFormatter={formatChartTooltipLabel as never}
               formatter={((v: number) => [
                 `${Number(v).toFixed(2)}%`,
                 "CPU",
               ]) as never}
-              contentStyle={{
-                borderRadius: 8,
-                border: "1px solid var(--border)",
-                background: "var(--card-solid)",
-                fontSize: 12,
-              }}
+              contentStyle={TOOLTIP_STYLE}
             />
             <Area
               type="monotone"
               dataKey="cpu"
-              stroke={colors.cpu}
-              fill={colors.cpu}
+              stroke={CHART_COLORS.cpu}
+              fill={CHART_COLORS.cpu}
               fillOpacity={0.15}
               strokeWidth={2}
               connectNulls={false}
@@ -241,19 +246,7 @@ export function LoadCharts({
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-            <XAxis
-              dataKey="time"
-              type="number"
-              domain={timeRange.domain}
-              ticks={timeRange.ticks}
-              allowDataOverflow={hours > 0}
-              interval="preserveStartEnd"
-              tickFormatter={(v) =>
-                formatChartTimeTick(v as number, hours || 1)
-              }
-              tick={{ fontSize: 10 }}
-              minTickGap={30}
-            />
+            <XAxis {...timeAxisProps} />
             <YAxis
               domain={[0, memoryTotal]}
               ticks={resourceTicks(memoryTotal)}
@@ -263,25 +256,18 @@ export function LoadCharts({
               tickFormatter={(v) => formatBytes(v as number, 0)}
             />
             <Tooltip
-              labelFormatter={((_l: any, payload: any) =>
-                (payload?.[0]?.payload as ChartPoint | undefined)?.label ||
-                "") as never}
+              labelFormatter={formatChartTooltipLabel as never}
               formatter={((v: number) => [
                 formatBytes(Number(v)),
                 "内存",
               ]) as never}
-              contentStyle={{
-                borderRadius: 8,
-                border: "1px solid var(--border)",
-                background: "var(--card-solid)",
-                fontSize: 12,
-              }}
+              contentStyle={TOOLTIP_STYLE}
             />
             <Area
               type="monotone"
               dataKey="ram"
-              stroke={colors.ram}
-              fill={colors.ram}
+              stroke={CHART_COLORS.ram}
+              fill={CHART_COLORS.ram}
               fillOpacity={0.15}
               strokeWidth={2}
               connectNulls={false}
@@ -298,19 +284,7 @@ export function LoadCharts({
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-            <XAxis
-              dataKey="time"
-              type="number"
-              domain={timeRange.domain}
-              ticks={timeRange.ticks}
-              allowDataOverflow={hours > 0}
-              interval="preserveStartEnd"
-              tickFormatter={(v) =>
-                formatChartTimeTick(v as number, hours || 1)
-              }
-              tick={{ fontSize: 10 }}
-              minTickGap={30}
-            />
+            <XAxis {...timeAxisProps} />
             <YAxis
               domain={[0, diskTotal]}
               ticks={resourceTicks(diskTotal)}
@@ -320,25 +294,18 @@ export function LoadCharts({
               tickFormatter={(v) => formatBytes(v as number, 0)}
             />
             <Tooltip
-              labelFormatter={((_l: any, payload: any) =>
-                (payload?.[0]?.payload as ChartPoint | undefined)?.label ||
-                "") as never}
+              labelFormatter={formatChartTooltipLabel as never}
               formatter={((v: number) => [
                 formatBytes(Number(v)),
                 "硬盘",
               ]) as never}
-              contentStyle={{
-                borderRadius: 8,
-                border: "1px solid var(--border)",
-                background: "var(--card-solid)",
-                fontSize: 12,
-              }}
+              contentStyle={TOOLTIP_STYLE}
             />
             <Area
               type="monotone"
               dataKey="disk"
-              stroke={colors.disk}
-              fill={colors.disk}
+              stroke={CHART_COLORS.disk}
+              fill={CHART_COLORS.disk}
               fillOpacity={0.15}
               strokeWidth={2}
               connectNulls={false}
@@ -355,44 +322,25 @@ export function LoadCharts({
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-            <XAxis
-              dataKey="time"
-              type="number"
-              domain={timeRange.domain}
-              ticks={timeRange.ticks}
-              allowDataOverflow={hours > 0}
-              interval="preserveStartEnd"
-              tickFormatter={(v) =>
-                formatChartTimeTick(v as number, hours || 1)
-              }
-              tick={{ fontSize: 10 }}
-              minTickGap={30}
-            />
+            <XAxis {...timeAxisProps} />
             <YAxis
               tick={{ fontSize: 10 }}
               width={48}
               tickFormatter={(v) => formatBytes(v as number, 0)}
             />
             <Tooltip
-              labelFormatter={((_l: any, payload: any) =>
-                (payload?.[0]?.payload as ChartPoint | undefined)?.label ||
-                "") as never}
+              labelFormatter={formatChartTooltipLabel as never}
               formatter={((v: number, name: string) => [
                 formatBytesPerSecond(Number(v)),
                 name === "net_out" ? "上行" : "下行",
               ]) as never}
-              contentStyle={{
-                borderRadius: 8,
-                border: "1px solid var(--border)",
-                background: "var(--card-solid)",
-                fontSize: 12,
-              }}
+              contentStyle={TOOLTIP_STYLE}
             />
             <Area
               type="monotone"
               dataKey="net_out"
-              stroke={colors.netOut}
-              fill={colors.netOut}
+              stroke={CHART_COLORS.netOut}
+              fill={CHART_COLORS.netOut}
               fillOpacity={0.12}
               strokeWidth={2}
               connectNulls={false}
@@ -401,8 +349,8 @@ export function LoadCharts({
             <Area
               type="monotone"
               dataKey="net_in"
-              stroke={colors.netIn}
-              fill={colors.netIn}
+              stroke={CHART_COLORS.netIn}
+              fill={CHART_COLORS.netIn}
               fillOpacity={0.1}
               strokeWidth={2}
               connectNulls={false}

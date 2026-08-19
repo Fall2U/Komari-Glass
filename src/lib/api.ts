@@ -73,10 +73,16 @@ export async function fetchLoadHistory(
   uuid: string,
   hours = 24
 ): Promise<{ records: HistoryRecord[] }> {
-  return callRpc("public:getRecordsByUUID", {
-    uuid,
-    hours: String(hours),
-  });
+  const data = await callRpc<{ records?: HistoryRecord[] } | null>(
+    "public:getRecordsByUUID",
+    {
+      uuid,
+      hours: String(hours),
+    }
+  );
+  return {
+    records: Array.isArray(data?.records) ? data.records : [],
+  };
 }
 
 export async function fetchPingHistory(

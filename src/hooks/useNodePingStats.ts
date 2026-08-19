@@ -62,10 +62,63 @@ const REFRESH_INTERVAL = 60_000;
 const cache = new Map<string, CacheEntry>();
 
 const PING_SLOTS = [
-  { key: "telecom", label: "电信", color: "#fb7185" },
-  { key: "mobile", label: "移动", color: "#34d399" },
-  { key: "unicom", label: "联通", color: "#60a5fa" },
+  {
+    key: "telecom",
+    label: "电信",
+    color: "#fb7185",
+    aliases: ["电信", "chinatelecom", "telecom", "ctcc"],
+  },
+  {
+    key: "mobile",
+    label: "移动",
+    color: "#34d399",
+    aliases: ["移动", "chinamobile", "mobile", "cmcc"],
+  },
+  {
+    key: "unicom",
+    label: "联通",
+    color: "#60a5fa",
+    aliases: ["联通", "chinaunicom", "unicom", "cucc"],
+  },
 ] as const;
+
+function normalizeTaskName(name: string): string {
+  return name.normalize("NFKC").toLowerCase().replace(/[\s_-]+/g, "");
+}
+
+function selectAutomaticPingTasks(
+  tasks: PingTask[],
+  validTaskIds: Set<number>
+): Map<keyof PingTaskSelection, PingTask> {
+  const available = tasks
+    .filter((task) => validTaskIds.has(task.id))
+    .map((task) => ({ task, normalizedName: normalizeTaskName(task.name) }));
+  const selected = new Map<keyof PingTaskSelection, PingTask>();
+  const usedTaskIds = new Set<number>();
+
+  for (const slot of PING_SLOTS) {
+    const match = available.find(
+      (candidate) =>
+        !usedTaskIds.has(candidate.task.id) &&
+        slot.aliases.some((alias) => candidate.normalizedName.includes(alias))
+    );
+    if (!match) continue;
+    selected.set(slot.key, match.task);
+    usedTaskIds.add(match.task.id);
+  }
+
+  for (const slot of PING_SLOTS) {
+    if (selected.has(slot.key)) continue;
+    const match = available.find(
+      (candidate) => !usedTaskIds.has(candidate.task.id)
+    );
+    if (!match) break;
+    selected.set(slot.key, match.task);
+    usedTaskIds.add(match.task.id);
+  }
+
+  return selected;
+}
 
 async function fetchPingData(uuid: string, hours: number): Promise<PingData> {
   const [history, stats] = await Promise.all([
@@ -226,6 +279,12 @@ export function useNodePingStats(
     }));
     const configuredMode = configured.some((slot) => slot.taskName !== "");
     const usedTaskIds = new Set<number>();
+    const automaticTasks = configuredMode
+      ? null
+      : selectAutomaticPingTasks(
+          data.history.tasks,
+          new Set(summaries.keys())
+        );
 
     const selected = configuredMode
       ? configured.flatMap((slot) => {
@@ -242,18 +301,18 @@ export function useNodePingStats(
             color: slot.color,
           }];
         })
-      : data.history.tasks
-          .flatMap((task) => {
-            const summary = summaries.get(task.id);
-            return summary ? [{ task, summary }] : [];
-          })
-          .slice(0, PING_SLOTS.length)
-          .map(({ task, summary }, index) => ({
+      : PING_SLOTS.flatMap((slot) => {
+          const task = automaticTasks?.get(slot.key);
+          if (!task) return [];
+          const summary = summaries.get(task.id);
+          if (!summary) return [];
+          return [{
             task,
             summary,
-            label: PING_SLOTS[index].label,
-            color: PING_SLOTS[index].color,
-          }));
+            label: slot.label,
+            color: slot.color,
+          }];
+        });
 
     const tasks = selected.map<NodePingTaskRow>(
       ({ task, summary, label, color }) => ({

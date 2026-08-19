@@ -97,8 +97,8 @@
         "type": "string",
         "default": "",
         "help": {
-          "zh-CN": "仅在启用三网延迟后生效。填写 Komari 后台中的完整任务名称；三项全部留空时自动使用前三个有效任务。",
-          "en": "Only used when carrier ping is enabled. Enter the exact task name, or leave all three empty to use the first three active tasks."
+          "zh-CN": "仅在启用三网延迟后生效。填写 Komari 后台中的完整任务名称；三项全部留空时优先按运营商名称自动匹配，未匹配项按后台顺序补充。",
+          "en": "Only used when carrier ping is enabled. Enter the exact task name, or leave all three empty to match carrier names first and fill unmatched slots in backend order."
         }
       },
       {

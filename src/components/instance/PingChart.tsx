@@ -18,6 +18,7 @@ import {
   getChartTimeRange,
   insertTimelineGaps,
 } from "@/lib/chart-gaps";
+import { cn } from "@/lib/cn";
 import {
   getExactPingLossByTask,
   summarizePingRecordsByTask,
@@ -65,6 +66,13 @@ export function PingChart({
   const [metricStats, setMetricStats] = useState<PingMetricTaskStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hiddenTaskIds, setHiddenTaskIds] = useState<Set<number>>(
+    () => new Set()
+  );
+
+  useEffect(() => {
+    setHiddenTaskIds(new Set());
+  }, [uuid]);
 
   useEffect(() => {
     let cancelled = false;
@@ -169,6 +177,18 @@ export function PingChart({
       }];
     });
   }, [data, metricStats, tasks, uuid]);
+  const visibleTaskDisplays = taskDisplays.filter(
+    (task) => !hiddenTaskIds.has(task.id)
+  );
+
+  const toggleTask = (taskId: number) => {
+    setHiddenTaskIds((current) => {
+      const next = new Set(current);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      return next;
+    });
+  };
 
   if (loading) return <Loading text="加载延迟图表…" className="min-h-[20vh]" />;
   if (error) {
@@ -192,31 +212,42 @@ export function PingChart({
         <h3 className="text-sm font-semibold">延迟监测</h3>
         {taskDisplays.length ? (
           <div className="flex flex-wrap gap-x-5 gap-y-1.5">
-            {taskDisplays.map((task) => (
-              <div
-                key={task.id}
-                className="flex min-w-0 items-center gap-2 text-xs"
-                title={`${task.name}\n延迟 ${task.latency.toFixed(1)} ms\n丢包 ${task.loss.toFixed(1)}%`}
-              >
-                <span
-                  className="size-2 shrink-0 rounded-full"
-                  style={{ backgroundColor: task.color }}
-                />
-                <span className="max-w-40 truncate font-medium">
-                  {task.name}
-                </span>
-                <span className="tabular-nums text-muted-foreground">
-                  {task.latency.toFixed(1)} ms
-                </span>
-                <span className="tabular-nums text-muted-foreground">
-                  丢包 {task.loss.toFixed(1)}%
-                </span>
-              </div>
-            ))}
+            {taskDisplays.map((task) => {
+              const visible = !hiddenTaskIds.has(task.id);
+              return (
+                <button
+                  key={task.id}
+                  type="button"
+                  aria-pressed={visible}
+                  aria-label={`${visible ? "隐藏" : "显示"}${task.name}延迟曲线`}
+                  className={cn(
+                    "flex min-w-0 items-center gap-2 rounded-sm px-1 py-0.5 text-left text-xs",
+                    "transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                    visible ? "opacity-100" : "opacity-35 hover:opacity-65"
+                  )}
+                  title={`${visible ? "点击隐藏" : "点击显示"} ${task.name}\n延迟 ${task.latency.toFixed(1)} ms\n丢包 ${task.loss.toFixed(1)}%`}
+                  onClick={() => toggleTask(task.id)}
+                >
+                  <span
+                    className="size-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: task.color }}
+                  />
+                  <span className="min-w-0 max-w-40 truncate font-medium">
+                    {task.name}
+                  </span>
+                  <span className="shrink-0 whitespace-nowrap tabular-nums text-muted-foreground">
+                    {task.latency.toFixed(1)} ms
+                  </span>
+                  <span className="shrink-0 whitespace-nowrap tabular-nums text-muted-foreground">
+                    丢包 {task.loss.toFixed(1)}%
+                  </span>
+                </button>
+              );
+            })}
           </div>
         ) : null}
       </div>
-      <div className="h-72 w-full">
+      <div className="relative h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
@@ -254,14 +285,14 @@ export function PingChart({
                 fontSize: 12,
               }}
             />
-            {tasks.map((task, i) => (
+            {visibleTaskDisplays.map((task) => (
               <Line
                 key={task.id}
                 type="monotone"
                 data={seriesByTask.get(task.id) || []}
                 dataKey="value"
                 name={task.name}
-                stroke={PALETTE[i % PALETTE.length]}
+                stroke={task.color}
                 strokeWidth={2}
                 dot={false}
                 connectNulls={false}
@@ -270,6 +301,11 @@ export function PingChart({
             ))}
           </LineChart>
         </ResponsiveContainer>
+        {taskDisplays.length > 0 && visibleTaskDisplays.length === 0 ? (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">
+            已隐藏全部延迟任务
+          </div>
+        ) : null}
       </div>
     </div>
   );

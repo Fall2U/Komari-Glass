@@ -11,7 +11,11 @@ import {
 } from "lucide-react";
 import { Flag } from "@/components/Flag";
 import { ProgressBar } from "@/components/ProgressBar";
-import { useNodePingStats } from "@/hooks/useNodePingStats";
+import {
+  useNodePingStats,
+  type NodePingTaskRow,
+  type PingTaskSelection,
+} from "@/hooks/useNodePingStats";
 import {
   formatCurrencyValue,
   formatPriceWithCycle,
@@ -41,10 +45,12 @@ import type { DisplayNode } from "@/lib/types";
 export function NodeCard({
   node,
   pingEnabled,
+  pingTaskSelection,
   onClick,
 }: {
   node: DisplayNode;
   pingEnabled: boolean;
+  pingTaskSelection: PingTaskSelection;
   onClick: () => void;
 }) {
   const memPct = safeDiv(node.ram, node.mem_total);
@@ -64,7 +70,12 @@ export function NodeCard({
     ? getRemainingValue(node.price, node.billing_cycle, node.expired_at)
     : 0;
   const tags = parseNodeTags(node.tags);
-  const ping = useNodePingStats(node.uuid, pingEnabled, 1);
+  const ping = useNodePingStats(
+    node.uuid,
+    pingEnabled,
+    1,
+    pingTaskSelection
+  );
   const offlineTime = formatOfflineTime(node.updated_at_live || node.updated_at);
   const trafficValueClassName = limited
     ? trafficPct >= 95
@@ -242,20 +253,11 @@ export function NodeCard({
           </DataPanel>
         </div>
 
-        <div className="grid grid-cols-2 gap-1.5">
-          <PingPanel
-            label="延迟"
-            value={ping.latencyDisplay}
-            bars={ping.latencyBars}
-            dimmed={!node.online}
-          />
-          <PingPanel
-            label="丢包"
-            value={ping.lossDisplay}
-            bars={ping.lossBars}
-            dimmed={!node.online}
-          />
-        </div>
+        <PingTaskPanels
+          rows={ping.tasks}
+          loading={ping.loading}
+          dimmed={!node.online}
+        />
 
         {tags.length > 0 ? (
           <div className="flex flex-wrap items-center gap-1">
@@ -374,67 +376,122 @@ function CompactLine({
   );
 }
 
-function PingPanel({
-  label,
-  value,
-  bars,
+function PingTaskPanels({
+  rows,
+  loading,
   dimmed,
 }: {
-  label: string;
-  value: string;
-  bars: Array<{ key: string; className: string; tooltip: string }>;
+  rows: NodePingTaskRow[];
+  loading: boolean;
   dimmed?: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        "node-data-panel group/ping-panel h-11 gap-1.5 !overflow-visible p-2",
-        dimmed && "blur-xs opacity-50"
-      )}
-    >
+    <div className={cn("grid grid-cols-2 gap-1.5", dimmed && "blur-xs opacity-50")}>
+      <PingTaskColumn title="延迟" rows={rows} loading={loading} kind="latency" />
+      <PingTaskColumn title="丢包" rows={rows} loading={loading} kind="loss" />
+    </div>
+  );
+}
+
+function PingTaskColumn({
+  title,
+  rows,
+  loading,
+  kind,
+}: {
+  title: string;
+  rows: NodePingTaskRow[];
+  loading: boolean;
+  kind: "latency" | "loss";
+}) {
+  const summary = loading
+    ? "加载中"
+    : rows.length === 3
+      ? "三网"
+      : `${rows.length}项`;
+
+  return (
+    <div className="node-data-panel group/ping-panel h-[7.75rem] gap-1.5 !overflow-visible p-2">
       <div className="flex items-center justify-between gap-2 text-[11px] leading-none">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium tabular-nums">{value}</span>
+        <span className="text-muted-foreground">{title}</span>
+        <span className="text-[10px] text-muted-foreground">{summary}</span>
       </div>
-      <div
-        className="grid min-h-0 flex-1 items-end gap-px opacity-85 transition-opacity duration-150 group-hover/ping-panel:opacity-100"
-        style={{
-          gridTemplateColumns: `repeat(${Math.max(bars.length, 1)}, minmax(0, 1fr))`,
-        }}
-      >
-        {bars.map((bar, index) => (
+      {rows.length ? (
+        <div className="flex min-h-0 flex-1 flex-col justify-between gap-1">
+          {rows.map((row) => (
+            <div key={row.id} className="flex min-w-0 flex-col gap-1">
+              <div
+                className="flex min-w-0 items-center gap-1 text-[11px] leading-none"
+                title={row.name}
+              >
+                <span
+                  className="size-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: row.color }}
+                />
+                <span className="min-w-0 flex-1 truncate">{row.label}</span>
+                <span className="shrink-0 font-semibold tabular-nums">
+                  {kind === "latency" ? row.latencyDisplay : row.lossDisplay}
+                </span>
+              </div>
+              <PingBars
+                bars={kind === "latency" ? row.latencyBars : row.lossBars}
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-1 items-center justify-center text-[10px] text-muted-foreground">
+          {loading ? "正在获取数据" : "暂无有效数据"}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PingBars({
+  bars,
+}: {
+  bars: Array<{ key: string; className: string; tooltip: string }>;
+}) {
+  return (
+    <div
+      className="grid h-2 items-end gap-px opacity-85 transition-opacity duration-150 group-hover/ping-panel:opacity-100"
+      style={{
+        gridTemplateColumns: `repeat(${Math.max(bars.length, 1)}, minmax(0, 1fr))`,
+      }}
+    >
+      {bars.map((bar, index) => (
+        <span
+          key={bar.key}
+          className="group/ping-bar relative block h-full min-w-0 hover:z-20"
+        >
           <span
-            key={bar.key}
-            className="group/ping-bar relative block h-full min-w-0 hover:z-20"
+            className={cn(
+              "block h-full min-h-[3px] w-full origin-bottom rounded-[1px]",
+              "transition-[transform,opacity] duration-150",
+              "group-hover/ping-panel:opacity-60 group-hover/ping-bar:scale-y-[1.6] group-hover/ping-bar:!opacity-100",
+              bar.className
+            )}
+          />
+          <span
+            role="tooltip"
+            className={cn(
+              "pointer-events-none absolute bottom-[calc(100%+0.4rem)] z-20 w-max max-w-32",
+              "invisible translate-y-0.5 whitespace-pre-line rounded-sm bg-foreground/90 px-1.5 py-1",
+              "text-[10px] leading-tight text-background opacity-0 shadow-lg",
+              "transition-[opacity,transform,visibility] duration-150",
+              "group-hover/ping-bar:visible group-hover/ping-bar:translate-y-0 group-hover/ping-bar:opacity-100",
+              bars.length === 1 || (index >= 3 && index < bars.length - 3)
+                ? "left-1/2 -translate-x-1/2"
+                : index < 3
+                  ? "left-0"
+                  : "right-0"
+            )}
           >
-            <span
-              className={cn(
-                "block h-full min-h-[3px] w-full origin-bottom rounded-[1px]",
-                "transition-[transform,opacity] duration-150",
-                "group-hover/ping-panel:opacity-60 group-hover/ping-bar:scale-y-[1.6] group-hover/ping-bar:!opacity-100",
-                bar.className
-              )}
-            />
-            <span
-              role="tooltip"
-              className={cn(
-                "pointer-events-none absolute bottom-[calc(100%+0.4rem)] z-20 w-max max-w-32",
-                "invisible translate-y-0.5 whitespace-pre-line rounded-sm bg-foreground/90 px-1.5 py-1",
-                "text-[10px] leading-tight text-background opacity-0 shadow-lg",
-                "transition-[opacity,transform,visibility] duration-150",
-                "group-hover/ping-bar:visible group-hover/ping-bar:translate-y-0 group-hover/ping-bar:opacity-100",
-                bars.length === 1 || (index >= 3 && index < bars.length - 3)
-                  ? "left-1/2 -translate-x-1/2"
-                  : index < 3
-                    ? "left-0"
-                    : "right-0"
-              )}
-            >
-              {bar.tooltip}
-            </span>
+            {bar.tooltip}
           </span>
-        ))}
-      </div>
+        </span>
+      ))}
     </div>
   );
 }

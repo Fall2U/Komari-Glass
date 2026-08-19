@@ -4,7 +4,7 @@ interface TimedPoint {
   time: number;
 }
 
-export interface ChartTimeRange {
+interface ChartTimeRange {
   domain: [number | "dataMin", number | "dataMax"];
   ticks?: number[];
 }

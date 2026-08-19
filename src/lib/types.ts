@@ -10,6 +10,9 @@ export interface ThemeSettings {
   showAssets?: boolean;
   showTraffic?: boolean;
   showSpeed?: boolean;
+  telecomPingTaskId?: string | number;
+  mobilePingTaskId?: string | number;
+  unicomPingTaskId?: string | number;
 }
 
 export interface PublicInfo {
@@ -23,29 +26,6 @@ export interface MetricDefinition {
   retention_days: number;
 }
 
-export interface MetricPoint {
-  time: string;
-  value: number | null;
-  count?: number;
-  tag?: Record<string, unknown>;
-  tags?: Record<string, unknown>;
-  labels?: Record<string, unknown>;
-}
-
-export interface MetricSeries {
-  metric_key: string;
-  entity_id: string;
-  task_id?: string | number;
-  tag?: Record<string, unknown>;
-  tags?: Record<string, unknown>;
-  labels?: Record<string, unknown>;
-  points: MetricPoint[];
-}
-
-export interface MetricQueryResponse {
-  series: MetricSeries[];
-}
-
 export interface PingMetricTaskStats {
   entity_id: string;
   task_id: string;
@@ -53,8 +33,6 @@ export interface PingMetricTaskStats {
   valid: number;
   loss: number;
   loss_approximate: boolean;
-  avg?: number;
-  latest?: number;
 }
 
 export interface PingMetricStatsResponse {

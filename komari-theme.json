@@ -70,6 +70,44 @@
       },
       {
         "name": {
+          "zh-CN": "服务器卡片",
+          "en": "Server Cards"
+        },
+        "type": "title"
+      },
+      {
+        "key": "telecomPingTaskId",
+        "name": {
+          "zh-CN": "电信延迟任务 ID",
+          "en": "Telecom Ping Task ID"
+        },
+        "type": "string",
+        "default": "",
+        "help": {
+          "zh-CN": "填写 Komari 延迟任务 ID；三项全部留空时自动显示前三个有效任务。",
+          "en": "Leave all three IDs empty to show the first three active tasks."
+        }
+      },
+      {
+        "key": "mobilePingTaskId",
+        "name": {
+          "zh-CN": "移动延迟任务 ID",
+          "en": "Mobile Ping Task ID"
+        },
+        "type": "string",
+        "default": ""
+      },
+      {
+        "key": "unicomPingTaskId",
+        "name": {
+          "zh-CN": "联通延迟任务 ID",
+          "en": "Unicom Ping Task ID"
+        },
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": {
           "zh-CN": "首页总览",
           "en": "Overview"
         },

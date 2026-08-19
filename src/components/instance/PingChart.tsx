@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -12,14 +11,23 @@ import {
   YAxis,
 } from "recharts";
 import { Loading } from "@/components/Loading";
-import { fetchPingHistory } from "@/lib/api";
+import { fetchPingHistory, fetchPingMetricStats } from "@/lib/api";
 import {
   formatChartTimeTick,
   getChartGapLimit,
   getChartTimeRange,
   insertTimelineGaps,
 } from "@/lib/chart-gaps";
-import type { PingHistoryResponse, PingRecord, PingTask } from "@/lib/types";
+import {
+  getExactPingLossByTask,
+  summarizePingRecordsByTask,
+} from "@/lib/ping";
+import type {
+  PingHistoryResponse,
+  PingMetricTaskStats,
+  PingRecord,
+  PingTask,
+} from "@/lib/types";
 
 const PALETTE = [
   "#2563b9",
@@ -38,6 +46,14 @@ interface PingSeriesPoint {
   value: number | null;
 }
 
+interface PingTaskDisplay {
+  id: number;
+  name: string;
+  latency: number;
+  loss: number;
+  color: string;
+}
+
 export function PingChart({
   uuid,
   hours,
@@ -46,6 +62,7 @@ export function PingChart({
   hours: number;
 }) {
   const [data, setData] = useState<PingHistoryResponse | null>(null);
+  const [metricStats, setMetricStats] = useState<PingMetricTaskStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,11 +72,18 @@ export function PingChart({
       setLoading(true);
       setError(null);
       try {
-        const res = await fetchPingHistory(uuid, hours);
-        if (!cancelled) setData(res);
+        const [history, stats] = await Promise.all([
+          fetchPingHistory(uuid, hours),
+          fetchPingMetricStats(uuid, hours).catch(() => null),
+        ]);
+        if (!cancelled) {
+          setData(history);
+          setMetricStats(stats?.stats ?? []);
+        }
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "加载失败");
+          setMetricStats([]);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -118,6 +142,33 @@ export function PingChart({
     () => getChartTimeRange(hours),
     [data, hours]
   );
+  const taskDisplays = useMemo<PingTaskDisplay[]>(() => {
+    const recordStats = new Map(
+      summarizePingRecordsByTask(data?.records ?? []).map((item) => [
+        item.taskId,
+        item,
+      ])
+    );
+    const exactLoss = getExactPingLossByTask(uuid, metricStats);
+
+    return tasks.flatMap((task, index) => {
+      const fallback = recordStats.get(task.id);
+      // Keep the headline latency tied to the records that draw this task's
+      // line. Metric stats can briefly lag or disagree after a task is added.
+      if (!fallback) return [];
+      const latency = fallback.latestLatency;
+      const loss = exactLoss.get(task.id) ?? fallback.loss;
+      if (!Number.isFinite(latency) || !Number.isFinite(loss)) return [];
+
+      return [{
+        id: task.id,
+        name: task.name,
+        latency: Number(latency),
+        loss: Number(loss),
+        color: PALETTE[index % PALETTE.length],
+      }];
+    });
+  }, [data, metricStats, tasks, uuid]);
 
   if (loading) return <Loading text="加载延迟图表…" className="min-h-[20vh]" />;
   if (error) {
@@ -137,7 +188,34 @@ export function PingChart({
 
   return (
     <div className="glass-panel rounded-lg p-4">
-      <h3 className="mb-3 text-sm font-semibold">延迟监测</h3>
+      <div className="mb-3 flex flex-col gap-2 border-b border-border/60 pb-3">
+        <h3 className="text-sm font-semibold">延迟监测</h3>
+        {taskDisplays.length ? (
+          <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+            {taskDisplays.map((task) => (
+              <div
+                key={task.id}
+                className="flex min-w-0 items-center gap-2 text-xs"
+                title={`${task.name}\n延迟 ${task.latency.toFixed(1)} ms\n丢包 ${task.loss.toFixed(1)}%`}
+              >
+                <span
+                  className="size-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: task.color }}
+                />
+                <span className="max-w-40 truncate font-medium">
+                  {task.name}
+                </span>
+                <span className="tabular-nums text-muted-foreground">
+                  {task.latency.toFixed(1)} ms
+                </span>
+                <span className="tabular-nums text-muted-foreground">
+                  丢包 {task.loss.toFixed(1)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
       <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
@@ -176,7 +254,6 @@ export function PingChart({
                 fontSize: 12,
               }}
             />
-            <Legend />
             {tasks.map((task, i) => (
               <Line
                 key={task.id}

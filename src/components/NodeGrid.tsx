@@ -4,7 +4,7 @@ import { NodeCard } from "@/components/NodeCard";
 import { useApp } from "@/contexts/AppProvider";
 
 export function NodeGrid() {
-  const { nodes, metricRetention, goInstance, error, refresh } = useApp();
+  const { nodes, metricRetention, settings, goInstance, error, refresh } = useApp();
 
   if (error) {
     return (
@@ -43,6 +43,11 @@ export function NodeGrid() {
           key={node.uuid}
           node={node}
           pingEnabled={metricRetention.pingHours >= 1}
+          pingTaskSelection={{
+            telecom: String(settings.telecomPingTaskId),
+            mobile: String(settings.mobilePingTaskId),
+            unicom: String(settings.unicomPingTaskId),
+          }}
           onClick={() => goInstance(node.uuid)}
         />
       ))}

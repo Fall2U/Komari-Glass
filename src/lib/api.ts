@@ -3,7 +3,6 @@ import type {
   HistoryRecord,
   LiveStatus,
   MetricDefinition,
-  MetricQueryResponse,
   NodeData,
   NodeStats,
   PingHistoryResponse,
@@ -99,21 +98,5 @@ export async function fetchPingMetricStats(
     entity_id: uuid,
     hours,
     max_points: maxPoints,
-  });
-}
-
-export async function fetchPingMetricSeries(
-  uuid: string,
-  hours = 1,
-  maxPoints = 6000
-): Promise<MetricQueryResponse> {
-  return callRpc("public:queryMetrics", {
-    metric_keys: ["ping.latency_ms", "ping.loss"],
-    entity_id: uuid,
-    hours,
-    downsample: true,
-    fill_empty: true,
-    max_points: maxPoints,
-    aggregation: "avg",
   });
 }

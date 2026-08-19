@@ -17,6 +17,9 @@ const DEFAULT_THEME_SETTINGS: Required<
     | "showAssets"
     | "showTraffic"
     | "showSpeed"
+    | "telecomPingTaskId"
+    | "mobilePingTaskId"
+    | "unicomPingTaskId"
   >
 > = {
   defaultAppearance: "system",
@@ -29,6 +32,9 @@ const DEFAULT_THEME_SETTINGS: Required<
   // 默认四项：在线 / 资产 / 累计流量 / 实时网速
   showTraffic: true,
   showSpeed: true,
+  telecomPingTaskId: "",
+  mobilePingTaskId: "",
+  unicomPingTaskId: "",
 };
 
 export function mergeThemeSettings(
@@ -54,7 +60,15 @@ export function mergeThemeSettings(
     showAssets: bool(src.showAssets, DEFAULT_THEME_SETTINGS.showAssets),
     showTraffic: bool(src.showTraffic, DEFAULT_THEME_SETTINGS.showTraffic),
     showSpeed: bool(src.showSpeed, DEFAULT_THEME_SETTINGS.showSpeed),
+    telecomPingTaskId: normalizePingTaskId(src.telecomPingTaskId),
+    mobilePingTaskId: normalizePingTaskId(src.mobilePingTaskId),
+    unicomPingTaskId: normalizePingTaskId(src.unicomPingTaskId),
   };
+}
+
+function normalizePingTaskId(value: unknown): string {
+  const text = String(value ?? "").trim();
+  return /^\d+$/.test(text) && Number(text) > 0 ? text : "";
 }
 
 function normalizeAssetCurrency(

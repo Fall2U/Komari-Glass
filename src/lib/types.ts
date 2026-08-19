@@ -10,9 +10,10 @@ export interface ThemeSettings {
   showAssets?: boolean;
   showTraffic?: boolean;
   showSpeed?: boolean;
-  telecomPingTaskId?: string | number;
-  mobilePingTaskId?: string | number;
-  unicomPingTaskId?: string | number;
+  showCarrierPing?: boolean;
+  telecomPingTaskName?: string;
+  mobilePingTaskName?: string;
+  unicomPingTaskName?: string;
 }
 
 export interface PublicInfo {

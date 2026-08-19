@@ -8,9 +8,18 @@ interface PingTaskHistoryPoint {
 
 interface PingRecordTaskSummary {
   taskId: number;
+  avgLatency: number;
   latestLatency: number;
   loss: number;
   history: PingTaskHistoryPoint[];
+}
+
+interface PingRecordSummary {
+  avgLatency: number;
+  avgLoss: number;
+  history: PingTaskHistoryPoint[];
+  hasData: boolean;
+  tasks: PingRecordTaskSummary[];
 }
 
 const HISTORY_BUCKET_COUNT = 20;
@@ -85,12 +94,31 @@ export function summarizePingRecordsByTask(
     );
     return [{
       taskId,
+      avgLatency: average(valid.map((record) => record.value)),
       latestLatency: latest.value,
       loss:
         ((taskValues.length - valid.length) / taskValues.length) * 100,
       history: buildTaskHistory(taskValues),
     }];
   });
+}
+
+export function summarizePingRecords(
+  records: PingRecord[]
+): PingRecordSummary {
+  const tasks = summarizePingRecordsByTask(records);
+  const includedTaskIds = new Set(tasks.map((task) => task.taskId));
+  const includedRecords = records.filter((record) =>
+    includedTaskIds.has(record.task_id)
+  );
+
+  return {
+    avgLatency: average(tasks.map((task) => task.avgLatency)),
+    avgLoss: average(tasks.map((task) => task.loss)),
+    history: buildTaskHistory(includedRecords),
+    hasData: tasks.length > 0,
+    tasks,
+  };
 }
 
 export function getExactPingLossByTask(

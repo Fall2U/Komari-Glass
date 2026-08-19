@@ -43,10 +43,11 @@ export function NodeGrid() {
           key={node.uuid}
           node={node}
           pingEnabled={metricRetention.pingHours >= 1}
+          showCarrierPing={settings.showCarrierPing}
           pingTaskSelection={{
-            telecom: String(settings.telecomPingTaskId),
-            mobile: String(settings.mobilePingTaskId),
-            unicom: String(settings.unicomPingTaskId),
+            telecom: settings.telecomPingTaskName,
+            mobile: settings.mobilePingTaskName,
+            unicom: settings.unicomPingTaskName,
           }}
           onClick={() => goInstance(node.uuid)}
         />

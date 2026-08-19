@@ -4,9 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchPingHistory, fetchPingMetricStats } from "@/lib/api";
 import {
   getExactPingLossByTask,
-  summarizePingRecordsByTask,
+  summarizePingRecords,
 } from "@/lib/ping";
-import type { PingHistoryResponse, PingMetricTaskStats } from "@/lib/types";
+import type {
+  PingHistoryResponse,
+  PingMetricTaskStats,
+  PingTask,
+} from "@/lib/types";
 
 interface PingBar {
   key: string;
@@ -33,6 +37,10 @@ export interface NodePingTaskRow {
 
 interface NodePingStats {
   tasks: NodePingTaskRow[];
+  latencyDisplay: string;
+  lossDisplay: string;
+  latencyBars: PingBar[];
+  lossBars: PingBar[];
   loading: boolean;
 }
 
@@ -48,6 +56,7 @@ interface CacheEntry {
 }
 
 const MAX_POINTS = 6000;
+const BAR_COUNT = 20;
 const CACHE_TTL = 60_000;
 const REFRESH_INTERVAL = 60_000;
 const cache = new Map<string, CacheEntry>();
@@ -122,9 +131,17 @@ function formatTime(time: string): string {
   });
 }
 
-function parseTaskId(value: string): number | null {
-  const id = Number(value);
-  return Number.isInteger(id) && id > 0 ? id : null;
+function emptyBars(label: string): PingBar[] {
+  return Array.from({ length: BAR_COUNT }, (_, index) => ({
+    key: `empty-${index}`,
+    className: "bg-muted-foreground/10",
+    tooltip: label,
+  }));
+}
+
+function average(values: number[]): number {
+  if (!values.length) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
 export function useNodePingStats(
@@ -177,37 +194,49 @@ export function useNodePingStats(
     };
   }, [uuid, enabled, hours]);
 
-  const tasks = useMemo(() => {
-    if (!data) return [];
+  const stats = useMemo<NodePingStats>(() => {
+    if (!data) {
+      const label = loading ? "加载中" : "无采样数据";
+      return {
+        tasks: [],
+        latencyDisplay: loading ? "加载中" : "-",
+        lossDisplay: loading ? "加载中" : "-",
+        latencyBars: emptyBars(label),
+        lossBars: emptyBars(label),
+        loading,
+      };
+    }
 
+    const recordStats = summarizePingRecords(data.history.records);
     const summaries = new Map(
-      summarizePingRecordsByTask(data.history.records).map((summary) => [
+      recordStats.tasks.map((summary) => [
         summary.taskId,
         summary,
       ])
     );
-    const taskMap = new Map(
-      data.history.tasks.map((task) => [task.id, task])
-    );
+    const taskMap = new Map<string, PingTask>();
+    for (const task of data.history.tasks) {
+      const name = task.name.trim();
+      if (name && !taskMap.has(name)) taskMap.set(name, task);
+    }
     const exactLoss = getExactPingLossByTask(uuid, data.metricStats);
     const configured = PING_SLOTS.map((slot) => ({
       ...slot,
-      id: parseTaskId(selection[slot.key]),
+      taskName: selection[slot.key].trim(),
     }));
-    const configuredMode = configured.some((slot) => slot.id !== null);
+    const configuredMode = configured.some((slot) => slot.taskName !== "");
     const usedTaskIds = new Set<number>();
 
     const selected = configuredMode
       ? configured.flatMap((slot) => {
-          if (slot.id === null || usedTaskIds.has(slot.id)) return [];
-          const summary = summaries.get(slot.id);
+          if (!slot.taskName) return [];
+          const task = taskMap.get(slot.taskName);
+          if (!task || usedTaskIds.has(task.id)) return [];
+          const summary = summaries.get(task.id);
           if (!summary) return [];
-          usedTaskIds.add(slot.id);
+          usedTaskIds.add(task.id);
           return [{
-            task: taskMap.get(slot.id) ?? {
-              id: slot.id,
-              name: `任务 ${slot.id}`,
-            },
+            task,
             summary,
             label: slot.label,
             color: slot.color,
@@ -226,37 +255,87 @@ export function useNodePingStats(
             color: PING_SLOTS[index].color,
           }));
 
-    return selected.map<NodePingTaskRow>(({ task, summary, label, color }) => ({
-      id: task.id,
-      label,
-      name: task.name,
-      color,
-      latencyDisplay: `${Math.round(summary.latestLatency)} ms`,
-      lossDisplay: `${(exactLoss.get(task.id) ?? summary.loss).toFixed(1)}%`,
-      latencyBars: summary.history.map((point, index) => ({
-        key: `latency-${task.id}-${point.time}-${index}`,
-        className:
-          point.latency === null
-            ? "bg-muted-foreground/15"
-            : latencyClass(point.latency),
-        tooltip:
-          point.latency === null
-            ? `${formatTime(point.time)}\n无采样数据`
-            : `${formatTime(point.time)}\n${Math.round(point.latency)} ms`,
-      })),
-      lossBars: summary.history.map((point, index) => ({
-        key: `loss-${task.id}-${point.time}-${index}`,
-        className:
-          point.loss === null
-            ? "bg-muted-foreground/15"
-            : lossClass(point.loss),
-        tooltip:
-          point.loss === null
-            ? `${formatTime(point.time)}\n无采样数据`
-            : `${formatTime(point.time)}\n${point.loss.toFixed(1)}%`,
-      })),
-    }));
-  }, [data, selection.telecom, selection.mobile, selection.unicom, uuid]);
+    const tasks = selected.map<NodePingTaskRow>(
+      ({ task, summary, label, color }) => ({
+        id: task.id,
+        label,
+        name: task.name,
+        color,
+        latencyDisplay: `${Math.round(summary.latestLatency)} ms`,
+        lossDisplay: `${(exactLoss.get(task.id) ?? summary.loss).toFixed(1)}%`,
+        latencyBars: summary.history.map((point, index) => ({
+          key: `latency-${task.id}-${point.time}-${index}`,
+          className:
+            point.latency === null
+              ? "bg-muted-foreground/15"
+              : latencyClass(point.latency),
+          tooltip:
+            point.latency === null
+              ? `${formatTime(point.time)}\n无采样数据`
+              : `${formatTime(point.time)}\n${Math.round(point.latency)} ms`,
+        })),
+        lossBars: summary.history.map((point, index) => ({
+          key: `loss-${task.id}-${point.time}-${index}`,
+          className:
+            point.loss === null
+              ? "bg-muted-foreground/15"
+              : lossClass(point.loss),
+          tooltip:
+            point.loss === null
+              ? `${formatTime(point.time)}\n无采样数据`
+              : `${formatTime(point.time)}\n${point.loss.toFixed(1)}%`,
+        })),
+      })
+    );
+    const exactLossValues = recordStats.tasks.map(
+      (summary) => exactLoss.get(summary.taskId) ?? summary.loss
+    );
+    const aggregateHistory = recordStats.history;
 
-  return { tasks, loading };
+    return {
+      tasks,
+      latencyDisplay: recordStats.hasData
+        ? `${Math.round(recordStats.avgLatency)} ms`
+        : "-",
+      lossDisplay: recordStats.hasData
+        ? `${average(exactLossValues).toFixed(1)}%`
+        : "-",
+      latencyBars: aggregateHistory.length
+        ? aggregateHistory.map((point, index) => ({
+            key: `latency-${point.time}-${index}`,
+            className:
+              point.latency === null
+                ? "bg-muted-foreground/15"
+                : latencyClass(point.latency),
+            tooltip:
+              point.latency === null
+                ? `${formatTime(point.time)}\n无采样数据`
+                : `${formatTime(point.time)}\n${Math.round(point.latency)} ms`,
+          }))
+        : emptyBars("无采样数据"),
+      lossBars: aggregateHistory.length
+        ? aggregateHistory.map((point, index) => ({
+            key: `loss-${point.time}-${index}`,
+            className:
+              point.loss === null
+                ? "bg-muted-foreground/15"
+                : lossClass(point.loss),
+            tooltip:
+              point.loss === null
+                ? `${formatTime(point.time)}\n无采样数据`
+                : `${formatTime(point.time)}\n${point.loss.toFixed(1)}%`,
+          }))
+        : emptyBars("无采样数据"),
+      loading,
+    };
+  }, [
+    data,
+    loading,
+    selection.telecom,
+    selection.mobile,
+    selection.unicom,
+    uuid,
+  ]);
+
+  return stats;
 }

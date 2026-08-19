@@ -17,9 +17,10 @@ const DEFAULT_THEME_SETTINGS: Required<
     | "showAssets"
     | "showTraffic"
     | "showSpeed"
-    | "telecomPingTaskId"
-    | "mobilePingTaskId"
-    | "unicomPingTaskId"
+    | "showCarrierPing"
+    | "telecomPingTaskName"
+    | "mobilePingTaskName"
+    | "unicomPingTaskName"
   >
 > = {
   defaultAppearance: "system",
@@ -32,9 +33,10 @@ const DEFAULT_THEME_SETTINGS: Required<
   // 默认四项：在线 / 资产 / 累计流量 / 实时网速
   showTraffic: true,
   showSpeed: true,
-  telecomPingTaskId: "",
-  mobilePingTaskId: "",
-  unicomPingTaskId: "",
+  showCarrierPing: false,
+  telecomPingTaskName: "",
+  mobilePingTaskName: "",
+  unicomPingTaskName: "",
 };
 
 export function mergeThemeSettings(
@@ -60,15 +62,18 @@ export function mergeThemeSettings(
     showAssets: bool(src.showAssets, DEFAULT_THEME_SETTINGS.showAssets),
     showTraffic: bool(src.showTraffic, DEFAULT_THEME_SETTINGS.showTraffic),
     showSpeed: bool(src.showSpeed, DEFAULT_THEME_SETTINGS.showSpeed),
-    telecomPingTaskId: normalizePingTaskId(src.telecomPingTaskId),
-    mobilePingTaskId: normalizePingTaskId(src.mobilePingTaskId),
-    unicomPingTaskId: normalizePingTaskId(src.unicomPingTaskId),
+    showCarrierPing: bool(
+      src.showCarrierPing,
+      DEFAULT_THEME_SETTINGS.showCarrierPing
+    ),
+    telecomPingTaskName: normalizePingTaskName(src.telecomPingTaskName),
+    mobilePingTaskName: normalizePingTaskName(src.mobilePingTaskName),
+    unicomPingTaskName: normalizePingTaskName(src.unicomPingTaskName),
   };
 }
 
-function normalizePingTaskId(value: unknown): string {
-  const text = String(value ?? "").trim();
-  return /^\d+$/.test(text) && Number(text) > 0 ? text : "";
+function normalizePingTaskName(value: unknown): string {
+  return String(value ?? "").trim();
 }
 
 function normalizeAssetCurrency(

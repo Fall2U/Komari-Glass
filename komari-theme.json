@@ -76,35 +76,56 @@
         "type": "title"
       },
       {
-        "key": "telecomPingTaskId",
+        "key": "showCarrierPing",
         "name": {
-          "zh-CN": "电信延迟任务 ID",
-          "en": "Telecom Ping Task ID"
+          "zh-CN": "启用三网延迟",
+          "en": "Enable Carrier Ping"
+        },
+        "type": "switch",
+        "default": false,
+        "help": {
+          "zh-CN": "开启后分别显示电信、移动、联通延迟与丢包；关闭时显示平均延迟与丢包。",
+          "en": "Show carrier-specific latency and loss; when disabled, show aggregate latency and loss."
+        }
+      },
+      {
+        "key": "telecomPingTaskName",
+        "name": {
+          "zh-CN": "电信延迟任务名称",
+          "en": "Telecom Ping Task Name"
         },
         "type": "string",
         "default": "",
         "help": {
-          "zh-CN": "填写 Komari 延迟任务 ID；三项全部留空时自动显示前三个有效任务。",
-          "en": "Leave all three IDs empty to show the first three active tasks."
+          "zh-CN": "仅在启用三网延迟后生效。填写 Komari 后台中的完整任务名称；三项全部留空时自动使用前三个有效任务。",
+          "en": "Only used when carrier ping is enabled. Enter the exact task name, or leave all three empty to use the first three active tasks."
         }
       },
       {
-        "key": "mobilePingTaskId",
+        "key": "mobilePingTaskName",
         "name": {
-          "zh-CN": "移动延迟任务 ID",
-          "en": "Mobile Ping Task ID"
+          "zh-CN": "移动延迟任务名称",
+          "en": "Mobile Ping Task Name"
         },
         "type": "string",
-        "default": ""
+        "default": "",
+        "help": {
+          "zh-CN": "仅在启用三网延迟后生效。",
+          "en": "Only used when carrier ping is enabled."
+        }
       },
       {
-        "key": "unicomPingTaskId",
+        "key": "unicomPingTaskName",
         "name": {
-          "zh-CN": "联通延迟任务 ID",
-          "en": "Unicom Ping Task ID"
+          "zh-CN": "联通延迟任务名称",
+          "en": "Unicom Ping Task Name"
         },
         "type": "string",
-        "default": ""
+        "default": "",
+        "help": {
+          "zh-CN": "仅在启用三网延迟后生效。",
+          "en": "Only used when carrier ping is enabled."
+        }
       },
       {
         "name": {

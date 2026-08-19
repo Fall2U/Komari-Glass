@@ -45,11 +45,13 @@ import type { DisplayNode } from "@/lib/types";
 export function NodeCard({
   node,
   pingEnabled,
+  showCarrierPing,
   pingTaskSelection,
   onClick,
 }: {
   node: DisplayNode;
   pingEnabled: boolean;
+  showCarrierPing: boolean;
   pingTaskSelection: PingTaskSelection;
   onClick: () => void;
 }) {
@@ -253,11 +255,28 @@ export function NodeCard({
           </DataPanel>
         </div>
 
-        <PingTaskPanels
-          rows={ping.tasks}
-          loading={ping.loading}
-          dimmed={!node.online}
-        />
+        {showCarrierPing ? (
+          <PingTaskPanels
+            rows={ping.tasks}
+            loading={ping.loading}
+            dimmed={!node.online}
+          />
+        ) : (
+          <div className="grid grid-cols-2 gap-1.5">
+            <PingPanel
+              label="延迟"
+              value={ping.latencyDisplay}
+              bars={ping.latencyBars}
+              dimmed={!node.online}
+            />
+            <PingPanel
+              label="丢包"
+              value={ping.lossDisplay}
+              bars={ping.lossBars}
+              dimmed={!node.online}
+            />
+          </div>
+        )}
 
         {tags.length > 0 ? (
           <div className="flex flex-wrap items-center gap-1">
@@ -376,6 +395,33 @@ function CompactLine({
   );
 }
 
+function PingPanel({
+  label,
+  value,
+  bars,
+  dimmed,
+}: {
+  label: string;
+  value: string;
+  bars: Array<{ key: string; className: string; tooltip: string }>;
+  dimmed?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "node-data-panel group/ping-panel h-11 gap-1.5 !overflow-visible p-2",
+        dimmed && "blur-xs opacity-50"
+      )}
+    >
+      <div className="flex items-center justify-between gap-2 text-[11px] leading-none">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="font-medium tabular-nums">{value}</span>
+      </div>
+      <PingBars bars={bars} fill />
+    </div>
+  );
+}
+
 function PingTaskPanels({
   rows,
   loading,
@@ -404,34 +450,28 @@ function PingTaskColumn({
   loading: boolean;
   kind: "latency" | "loss";
 }) {
-  const summary = loading
-    ? "加载中"
-    : rows.length === 3
-      ? "三网"
-      : rows.length
-        ? `${rows.length}项`
-        : "";
-
   return (
     <div className="node-data-panel group/ping-panel h-[7.75rem] gap-1.5 !overflow-visible p-2">
       <div className="flex items-center justify-between gap-2 text-[11px] leading-none">
         <span className="text-muted-foreground">{title}</span>
-        <span className="text-[10px] text-muted-foreground">{summary}</span>
+        {loading ? (
+          <span className="text-[10px] text-muted-foreground">加载中</span>
+        ) : null}
       </div>
       {rows.length ? (
         <div className="flex min-h-0 flex-1 flex-col justify-between gap-1">
           {rows.map((row) => (
             <div key={row.id} className="flex min-w-0 flex-col gap-1">
               <div
-                className="flex min-w-0 items-center gap-1 text-[11px] leading-none"
+                className="flex min-w-0 items-center gap-1 text-[11px] leading-4"
                 title={row.name}
               >
                 <span
                   className="size-2 shrink-0 rounded-full"
                   style={{ backgroundColor: row.color }}
                 />
-                <span className="min-w-0 flex-1 truncate">{row.label}</span>
-                <span className="shrink-0 font-semibold tabular-nums">
+                <span className="shrink-0 whitespace-nowrap">{row.label}</span>
+                <span className="ml-auto shrink-0 font-semibold tabular-nums">
                   {kind === "latency" ? row.latencyDisplay : row.lossDisplay}
                 </span>
               </div>
@@ -454,12 +494,17 @@ function PingTaskColumn({
 
 function PingBars({
   bars,
+  fill = false,
 }: {
   bars: Array<{ key: string; className: string; tooltip: string }>;
+  fill?: boolean;
 }) {
   return (
     <div
-      className="grid h-2 items-end gap-px opacity-85 transition-opacity duration-150 group-hover/ping-panel:opacity-100"
+      className={cn(
+        "grid items-end gap-px opacity-85 transition-opacity duration-150 group-hover/ping-panel:opacity-100",
+        fill ? "min-h-0 flex-1" : "h-2"
+      )}
       style={{
         gridTemplateColumns: `repeat(${Math.max(bars.length, 1)}, minmax(0, 1fr))`,
       }}

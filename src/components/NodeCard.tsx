@@ -408,7 +408,9 @@ function PingTaskColumn({
     ? "加载中"
     : rows.length === 3
       ? "三网"
-      : `${rows.length}项`;
+      : rows.length
+        ? `${rows.length}项`
+        : "";
 
   return (
     <div className="node-data-panel group/ping-panel h-[7.75rem] gap-1.5 !overflow-visible p-2">
@@ -439,10 +441,12 @@ function PingTaskColumn({
             </div>
           ))}
         </div>
-      ) : (
+      ) : loading ? (
         <div className="flex flex-1 items-center justify-center text-[10px] text-muted-foreground">
-          {loading ? "正在获取数据" : "暂无有效数据"}
+          正在获取数据
         </div>
+      ) : (
+        <div className="flex-1" aria-hidden="true" />
       )}
     </div>
   );

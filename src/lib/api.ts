@@ -83,10 +83,17 @@ export async function fetchPingHistory(
   uuid: string,
   hours = 24
 ): Promise<PingHistoryResponse> {
-  return callRpc("public:getPingRecords", {
-    uuid,
-    hours: String(hours),
-  });
+  const data = await callRpc<Partial<PingHistoryResponse> | null>(
+    "public:getPingRecords",
+    {
+      uuid,
+      hours: String(hours),
+    }
+  );
+  return {
+    records: Array.isArray(data?.records) ? data.records : [],
+    tasks: Array.isArray(data?.tasks) ? data.tasks : [],
+  };
 }
 
 export async function fetchPingMetricStats(
@@ -94,9 +101,15 @@ export async function fetchPingMetricStats(
   hours = 1,
   maxPoints = 6000
 ): Promise<PingMetricStatsResponse> {
-  return callRpc("public:getPingMetricStats", {
-    entity_id: uuid,
-    hours,
-    max_points: maxPoints,
-  });
+  const data = await callRpc<Partial<PingMetricStatsResponse> | null>(
+    "public:getPingMetricStats",
+    {
+      entity_id: uuid,
+      hours,
+      max_points: maxPoints,
+    }
+  );
+  return {
+    stats: Array.isArray(data?.stats) ? data.stats : [],
+  };
 }

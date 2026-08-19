@@ -64,9 +64,12 @@ jobs:
           path: release/komari-theme-glass-${{ github.ref_name }}-*.zip
           if-no-files-found: error
 
+      - name: Create release notes from commit message
+        run: git log -1 --format=%B "$GITHUB_SHA" > release-notes.md
+
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v3.0.2
         with:
-          generate_release_notes: true
+          body_path: release-notes.md
           fail_on_unmatched_files: true
           files: release/komari-theme-glass-${{ github.ref_name }}-*.zip

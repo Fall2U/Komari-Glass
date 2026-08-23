@@ -306,7 +306,7 @@ export function useNodePingStats(
           return [{
             task,
             summary,
-            label: slot.label,
+            label: task.name,
             color: slot.color,
           }];
         })
@@ -318,7 +318,7 @@ export function useNodePingStats(
           return [{
             task,
             summary,
-            label: slot.label,
+            label: task.name,
             color: slot.color,
           }];
         });

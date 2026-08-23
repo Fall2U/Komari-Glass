@@ -93,15 +93,16 @@ export function NodeCard({
       ? "免费"
       : "";
 
-  const remainingText = free
-    ? "长期"
-    : paid
+  const remainingText =
+    free || paid
       ? expireStatus === "expired"
         ? "已过期"
         : expireStatus === "long_term"
           ? "长期"
           : expireStatus === "unknown"
-            ? "未设置"
+            ? free
+              ? "长期"
+              : "未设置"
             : `${remainingDays} 天`
       : "";
 

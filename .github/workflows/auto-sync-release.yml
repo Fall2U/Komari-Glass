@@ -1,0 +1,100 @@
+name: Auto Sync and Release
+
+on:
+  schedule:
+    # 每天北京时间早上8点运行
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: '即使没有检测到上游更新，也强制触发编译发布'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+      - name: Sync with upstream
+        run: |
+          git remote add upstream https://github.com/imengying/Komari-Glass.git
+          git fetch upstream
+          
+          # 检查上游 main 分支是否有新提交
+          NEW_COMMITS=$(git log HEAD..upstream/main --oneline)
+          
+          if [ -n "$NEW_COMMITS" ]; then
+            echo "检测到上游更新，正在合并..."
+            git merge upstream/main --no-edit
+            git push origin HEAD
+            echo "UPDATED=true" >> $GITHUB_ENV
+          else
+            echo "未检测到上游更新。"
+            if [ "${{ github.event.inputs.force_build }}" == "true" ]; then
+              echo "UPDATED=true" >> $GITHUB_ENV
+              echo "已手动请求强制编译。"
+            else
+              echo "UPDATED=false" >> $GITHUB_ENV
+            fi
+          fi
+
+      - name: Set up Bun
+        if: env.UPDATED == 'true'
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: 1.3.14
+
+      - name: Set up Node.js
+        if: env.UPDATED == 'true'
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        if: env.UPDATED == 'true'
+        run: bun install --frozen-lockfile
+
+      - name: Build theme
+        if: env.UPDATED == 'true'
+        run: bun run build
+
+      - name: Prepare Release Info
+        if: env.UPDATED == 'true'
+        run: |
+          # 使用当前时间生成唯一的发布标签
+          DATE_TAG="sync-$(date +'%Y%m%d%H%M')"
+          echo "RELEASE_TAG=$DATE_TAG" >> $GITHUB_ENV
+          # 获取生成的 zip 文件名
+          ZIP_NAME=$(ls release/komari-theme-glass-*.zip | head -n 1)
+          echo "ZIP_PATH=$ZIP_NAME" >> $GITHUB_ENV
+
+      - name: Upload build artifact
+        if: env.UPDATED == 'true'
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: auto-build-${{ env.RELEASE_TAG }}
+          path: ${{ env.ZIP_PATH }}
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        if: env.UPDATED == 'true'
+        uses: softprops/action-gh-release@v3.0.2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: Auto Sync Update ${{ env.RELEASE_TAG }}
+          body: "检测到上游更新并自动构建的发布版本。"
+          files: ${{ env.ZIP_PATH }}
